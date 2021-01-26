@@ -1,0 +1,1149 @@
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+     1                          is_main = 1
+     2                          
+
+; ******** Source: ..\lib\x16.asm
+     1                          !cpu 65c02
+     2                          ; kernal functions
+     3                          ; === C64 ==========================================================
+     4                          ; Channel I/O
+     5                          CHROUT  = $FFD2     ; write character on screen at cursor position
+     6                          CHRIN   = $FFCF     ; get character
+     7                          SETLFS  = $FFBA     ; set up a logical file
+     8                          SETNAM  = $FFBD     ; set a file name
+     9                          LOAD    = $FFD5     ; loads a file based on SETNAM
+    10                          SAVE    = $FFD8     ; save a file from memory
+    11                          OPEN    = $FFC0     ; open a logical file
+    12                          CLOSE   = $FFC3     ; close a logical file
+    13                          CHKIN   = $FFC6     ; open a channel for input
+    14                          CHKOUT  = $FFC9     ; set channel for character output
+    15                          SETMSG  = $FF90     ; set verbosity
+    16                          READST  = $FFB7     ; return status byte
+    17                          CLRCHN  = $FFCC     ; restore character I/O to screen/keyboard
+    18                          CLALL   = $FFE7     ; close all channels
+    19                          ; Commodore Peripheral Bus
+    20                          TALK    = $FFB4     ; send TALK command
+    21                          LISTEN  = $FFB1     ; send LISTEN command
+    22                          UNLSN   = $FFAE     ; send UNLISTEN command
+    23                          UNTLK   = $FFBA     ; send UNTALK command
+    24                          IECOUT  = $FFA8     ; send byte to serial bus
+    25                          IECIN   = $FFA5     ; read byte from serial bus
+    26                          SETTMO  = $FFA2     ; set timeout
+    27                          TKSA    = $FF96     ; send TALK secondary address
+    28                          SECOND  = $FF93     ; send LISTEN secondary address
+    29                          ; Memory
+    30                          MEMBOT  = $FF9C     ; read/write address of start of usable RAM
+    31                          MEMTOP  = $FF99     ; read/write address of end of usable RAM
+    32                          ; Time
+    33                          RDTIM   = $FFDE     ; read system clock
+    34                          SETTIM  = $FFDB     ; write system clock
+    35                          UDTIM   = $FFEA     ; advance clock
+    36                          ; Other
+    37                          STOP    = $FFE1     ; test for STOP key
+    38                          GETIN   = $FFE4     ; get character from keyboard
+    39                          SCREEN  = $FFED     ; get the screen resolution
+    40                          PLOT    = $FFF0     ; read/write cursor position
+    41                          IOBASE  = $FFF3     ; return start of I/O area
+    42                          ; === C128 =========================================================
+    43                          CLOSE_ALL=$FF4A     ; close all files on a device
+    44                          LKUPLA  = $FF8D     ; search tables for given LA
+    45                          LKUPSA  = $FF8A     ; search tables for given SA
+    46                          DLCHR   = $FF62     ; activate a text mode font in the video hardware (not yet implemented)
+    47                          PFKEY   = $FF65     ; program a function key (not yet implemented)
+    48                          FETCH   = $FF74     ; LDA (fetvec),Y from any bank (fetvec = $03AF)
+    49                          STASH   = $FF77     ; STA (stavec),Y to any bank (not yet implemented)
+    50                          CMPARE  = $FF7A     ; CMP (cmpvec),Y to any bank (not yet implemented)
+    51                          PRIMM   = $FF7D     ; print string following the caller's code
+    52                          ; === X16 ==========================================================
+    53                          ; Note : usage of a "16-bit" ABI using 16 virtual registers of 16-bit each
+    54                          ; r0 -> r15 uses ZP locations from $02 to $21
+    55                          ; Lower end first, Higher end last, example r0 => L=$02 H=$03
+    56                          ; Clock
+    57                          clock_set_date_time = $FF4D ; set date and time
+    58                          clock_get_date_time = $FF50 ; get date and time
+    59                          ; Mouse
+    60                          mouse_config        = $FF68 ; configure mouse pointer
+    61                          mouse_scan          = $FF71 ; query mouse
+    62                          mouse_get           = $FF6B ; get state of mouse
+    63                          ; Joystick
+    64                          joystick_scan       = $FF53 ; query joysticks
+    65                          joystick_mask_right = %00000001
+    66                          joystick_mask_left  = %00000010
+    67                          joystick_mask_down  = %00000100
+    68                          joystick_mask_up    = %00001000
+    69                          joystick_mask_start = %00010000
+    70                          joystick_mask_select= %00100000
+    71                          joystick_mask_Y     = %01000000
+    72                          joystick_mask_nes_B = %01000000
+    73                          joystick_mask_B     = %10000000
+    74                          joystick_mask_nes_A = %10000000
+    75                          joystick_mask_type  = %00001111
+    76                          joystick_mask_R     = %00010000
+    77                          joystick_mask_L     = %00100000
+    78                          joystick_mask_X     = %01000000
+    79                          joystick_mask_A     = %10000000
+    80                          joystick_get        = $FF56 ; get state of one joystick, pressed button = corresponding bit is zero
+    81                          ; Sprites
+    82                          sprite_set_image    = $FEF0 ; set the image of a sprite
+    83                          sprite_set_position = $FEF3 ; set the position of a sprite
+    84                          ; Framebuffer
+    85                          FB_init             = $FEF6 ; enable graphics mode
+    86                          FB_get_info         = $FEF9 ; get screen size and color depth
+    87                          FB_set_palette      = $FEFC ; set (parts of) the palette
+    88                          FB_cursor_position  = $FEFF ; position the direct-access cursor
+    89                          FB_cursor_next_line = $FF02 ; move direct-access cursor to next line
+    90                          FB_get_pixel        = $FF05 ; read one pixel, update cursor
+    91                          FB_get_pixels       = $FF08 ; copy pixels into RAM, update cursor
+    92                          FB_set_pixel        = $FF0B ; set one pixel_ update cursor
+    93                          FB_set_pixels       = $FF0E ; copy pixels from RAM, update cursor
+    94                          FB_set_8_pixels     = $FF11 ; set 8 pixels from bit mask (transparent), update cursor
+    95                          FB_set_8_pixels_opaque=$FF14; set 8 pixels from bit mask (opaque), update cursor
+    96                          FB_fill_pixels      = $FF17 ; fill pixels with constant color, update cursor
+    97                          FB_filter_pixels    = $FF1A ; apply transform to pixels, update cursor
+    98                          FB_move_pixels      = $FF1D ; copy horizontally consecutive pixels to a different position
+    99                          ; Graphics
+   100                          GRAPH_init          = $FF20 ; initialize graphics
+   101                          GRAPH_clear         = $FF23 ; clear screen
+   102                          GRAPH_set_window    = $FF26 ; set clipping region
+   103                          GRAPH_set_colors    = $FF29 ; set stroke, fill and background colors
+   104                          GRAPH_draw_line     = $FF2C ; draw a line
+   105                          GRAPH_draw_rect     = $FF2F ; draw a rectangle (optionally filled)
+   106                          GRAPH_move_rect     = $FF32 ; move pixels
+   107                          GRAPH_draw_oval     = $FF35 ; draw an oval or circle
+   108                          GRAPH_draw_image    = $FF38 ; draw a rectangular image
+   109                          GRAPH_set_font      = $FF3B ; set the current font
+   110                          GRAPH_get_char_size = $FF3E ; get size and baseline of a character
+   111                          GRAPH_put_char      = $FF41 ; print a character
+   112                          ; Console
+   113                          console_init        = $FEDB ; initialize console mode
+   114                          console_put_char    = $FEDE ; print character to console
+   115                          console_put_image   = $FED8 ; draw image as if it was a character
+   116                          console_get_char    = $FEE1 ; get character from console
+   117                          console_set_paging_message = $FED5 ; set paging message or disable paging
+   118                          ; Other
+   119                          memory_fill         = $FEE4 ; fill memory region with a byte value
+   120                          memory_copy         = $FEE7 ; copy memory region
+   121                          memory_crc          = $FEEA ; calculate CRC16 of memory region
+   122                          memory_decompress   = $FEED ; decompress LZSA2 block
+   123                          entropy_get         = $FECF ; get 24 random bits
+   124                          monitor             = $FF44 ; enter machine language monitor
+   125                          enter_basic         = $FF47 ; enter BASIC
+   126                          screen_set_mode     = $FF5F ; set screen mode
+   127                          screen_set_charset  = $FF62 ; activate 8x8 text mode charset
+   128                          ; === end of kernal fn =============================================
+   129                          
+   130                          ; PETSCII SPECIAL CHARACTERS
+   131                          PET_NULL        = $00
+   132                          PET_COLOR_SWAP  = $01
+   133                          PET_STOP        = $03
+   134                          PET_UNDERLINE   = $04
+   135                          PET_COLOR_WHITE = $05
+   136                          PET_BOLD        = $06
+   137                          PET_BELL        = $07
+   138                          PET_BACKSPACE   = $08
+   139                          PET_TAB         = $09
+   140                          PET_LF          = $0A
+   141                          PET_ITALIC      = $0B
+   142                          PET_OUTLINE     = $0C
+   143                          PET_REGULAR_RTN = $0D
+   144                          PET_LOWERCASE   = $0E
+   145                          PET_ISO_CHRSET_Y= $0F
+   146                          PET_F9          = $10
+   147                          PET_CURSOR_DOWN = $11
+   148                          PET_REVERSE     = $12
+   149                          PET_HOME        = $13
+   150                          PET_DEL         = $14
+   151                          PET_F10         = $15
+   152                          PET_F11         = $16
+   153                          PET_F12         = $17
+   154                          PET_SHIFT_TAB   = $18
+   155                          PET_COLOR_RED   = $1C
+   156                          PET_CURSOR_RIGHT= $1D
+   157                          PET_COLOR_GREEN = $1E
+   158                          PET_COLOR_BLUE  = $1F
+   159                          PET_COLOR_ORANGE= $81
+   160                          PET_RUN         = $83
+   161                          PET_HELP        = $84
+   162                          PET_F1          = $85
+   163                          PET_F3          = $86
+   164                          PET_F5          = $87
+   165                          PET_F7          = $88
+   166                          PET_F2          = $89
+   167                          PET_F4          = $8A
+   168                          PET_F6          = $8B
+   169                          PET_F8          = $9C
+   170                          PET_SHIFTED_RTN = $8D
+   171                          PET_UPPERCASE   = $8E
+   172                          PET_ISO_CHRSET_N= $8F
+   173                          PET_COLOR_BLACK = $90
+   174                          PET_CURSOR_UP   = $91
+   175                          PET_CLEAR_ALL   = $92
+   176                          PET_CLEAR       = $93
+   177                          PET_INSERT      = $94
+   178                          PET_COLOR_BROWN = $95
+   179                          PET_COLOR_LRED  = $96
+   180                          PET_COLOR_DGRAY = $97
+   181                          PET_COLOR_GRAY  = $98
+   182                          PET_COLOR_LGREEN= $99
+   183                          PET_COLOR_LBLUE = $9A
+   184                          PET_COLOR_LGRAY = $9B
+   185                          PET_COLOR_PURPLE= $9C
+   186                          PET_CURSOR_LEFT = $9D
+   187                          PET_COLOR_YELLOW= $9E
+   188                          PET_COLOR_CYAN  = $9F
+   189                          
+   190                          
+   191                          ; hardware addresses
+   192                          x16_r0 = $02
+   193                          x16_r0_l = $02
+   194                          x16_r0_h = $03
+   195                          x16_r1 = $04
+   196                          x16_r1_l = $04
+   197                          x16_r1_h = $05
+   198                          x16_r2 = $06
+   199                          x16_r2_l = $06
+   200                          x16_r2_h = $07
+   201                          x16_r3 = $08
+   202                          x16_r3_l = $08
+   203                          x16_r3_h = $09
+   204                          x16_r4 = $0A
+   205                          x16_r4_l = $0A
+   206                          x16_r4_h = $0B
+   207                          x16_r5 = $0C
+   208                          x16_r5_l = $0C
+   209                          x16_r5_h = $0D
+   210                          x16_r6 = $0E
+   211                          x16_r6_l = $0E
+   212                          x16_r6_h = $0F
+   213                          x16_r7 = $10
+   214                          x16_r7_l = $10
+   215                          x16_r7_h = $11
+   216                          x16_r8 = $12
+   217                          x16_r8_l = $12
+   218                          x16_r8_h = $13
+   219                          x16_r9 = $14
+   220                          x16_r9_l = $14
+   221                          x16_r9_h = $15
+   222                          x16_r10 = $16
+   223                          x16_r10_l = $16
+   224                          x16_r10_h = $17
+   225                          x16_r11 = $18
+   226                          x16_r11_l = $18
+   227                          x16_r11_h = $19
+   228                          x16_r12 = $1A
+   229                          x16_r12_l = $1A
+   230                          x16_r12_h = $1B
+   231                          x16_r13 = $1C
+   232                          x16_r13_l = $1C
+   233                          x16_r13_h = $1D
+   234                          x16_r14 = $1E
+   235                          x16_r14_l = $1E
+   236                          x16_r14_h = $1F
+   237                          x16_r15 = $20
+   238                          x16_r15_l = $20
+   239                          x16_r15_h = $21
+   240                          irq_handler = $0314
+   241                          VIA1_PB = $9F60
+   242                          VIA1_PA = $9F61
+   243                          
+   244                          
+   245                          ; registers
+   246                          ROM_BANK = VIA1_PB
+   247                          RAM_BANK = VIA1_PA
+   248                          
+   249                          
+   250                          ; macros
+   251                          
+   252                          ; BASIC startup command
+   253                          ; uses bytes $801 to $80C to setup a simple command that runs code starting at $080D
+   254                          !macro basic_startup {
+   255                          *= $801
+   256                              ; !byte $01,$08 ; prg starting location
+   257                              !byte $0b,$08 ; basic next command address
+   258                              !byte $01,$00 ; basic line number
+   259                              !byte $9e,'2','0','6','1' ; SYS 2061 ($80D)
+   260                              !byte $00,$00,$00 ; empty BASIC command
+   261                          }
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+     3                          
+
+; ******** Source: ..\lib\irq.asm
+     1                          !ifndef irq_handler {
+     2                              !serious "missing platform irq_handler address!"
+     3                          }
+     4                          
+     5                          ; Initializes IRQ handler and store a backup of Kernal's IRQ handler
+     6                          ; params:
+     7                          ;     16b kernal_irq_addr: address where to store the backup of kernal's irq handler
+     8                          ;     16b custom_irq_addr: address where the irq handler should jump
+     9                          !macro fn_irq_init .kernal_irq_addr, .custom_irq_addr {
+    10                              lda irq_handler         ; \
+    11                              sta .kernal_irq_addr    ;  |- store kernal irq
+    12                              lda irq_handler+1       ;  |
+    13                              sta .kernal_irq_addr+1  ; /
+    14                          
+    15                              lda #<.custom_irq_addr  ; \
+    16                              sta irq_handler         ;  |- loads our custom irq
+    17                              lda #>.custom_irq_addr  ;  |
+    18                              sta irq_handler+1       ; /
+    19                          }
+    20                          
+    21                          ; Restore the Kernal's IRQ handler
+    22                          ; params:
+    23                          ;     16b kernal_irq_addr: address where the backup of kernal's irq handler is stored
+    24                          !macro fn_irq_restore .kernal_irq_addr {
+    25                              lda #<.kernal_irq_addr  ; \
+    26                              sta irq_handler         ;  |- restore back the irq
+    27                              lda #>.kernal_irq_addr  ;  |
+    28                              sta irq_handler+1       ; /
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+     4                          
+
+; ******** Source: ..\lib\vera.asm
+     1                          vera_low_addr   = $9F20
+     2                          vera_high_addr  = $9F21
+     3                          vera_stride_bank= $9F22
+     4                          
+     5                          vera_data_0 = $9F23
+     6                          vera_data_1 = $9F24
+     7                          vera_ctrl   = $9F25
+     8                          
+     9                          vera_isr_mask_collisions= %11110000
+    10                          vera_isr_mask_aflow     = %00001000
+    11                          vera_isr_mask_sprcol    = %00000100
+    12                          vera_isr_mask_line      = %00000010
+    13                          vera_isr_mask_vsync     = %00000001
+    14                          vera_ien    = $9F26
+    15                          vera_isr    = $9F27
+    16                          vera_irqline= $9F28
+    17                          ; if DCSEL == 0 
+    18                          vera_video  = $9F29
+    19                          vera_hscale = $9F2A
+    20                          vera_vscale = $9F2B
+    21                          vera_border = $9F2C
+    22                          ; else if DCSEL == 1
+    23                          vera_hstart = $9F29
+    24                          vera_hstop  = $9F2A
+    25                          vera_vstart = $9F2B
+    26                          vera_vstop  = $9F2C
+    27                          ; end
+    28                          
+    29                          vera_layer0_config      = $9F2D
+    30                          vera_layer0_mapbase     = $9F2E
+    31                          vera_layer0_tilebase    = $9F2F
+    32                          vera_layer0_hscroll_L   = $9F30
+    33                          vera_layer0_hscroll_H   = $9F31
+    34                          vera_layer0_vscroll_L   = $9F32
+    35                          vera_layer0_vscroll_H   = $9F33
+    36                          
+    37                          vera_layer1_config      = $9F34
+    38                          vera_layer1_mapbase     = $9F35
+    39                          vera_layer1_tilebase    = $9F36
+    40                          vera_layer1_hscroll_L   = $9F37
+    41                          vera_layer1_hscroll_H   = $9F38
+    42                          vera_layer1_vscroll_L   = $9F39
+    43                          vera_layer1_vscroll_H   = $9F3A
+    44                          
+    45                          vera_audio_ctrl = $9F3B
+    46                          vera_audio_rate = $9F3C
+    47                          vera_audio_data = $9F3D
+    48                          
+    49                          vera_spi_data = $9F3E
+    50                          vera_spi_ctrl = $9F3F
+    51                          
+    52                          ; ########################################################
+    53                          ; ### INITIALIZATION #####################################
+    54                          ; ########################################################
+    55                          
+    56                          ; insert subroutines into your code
+    57                          ; you need to run this macro once to enable features of this file
+    58                          !macro fn_vera_init_subroutines {
+    59                              jmp vera_sr_end
+    60                          
+    61                          ; @see !macro fn_vera_upload
+    62                          ; params:
+    63                          ;     x = chunk quantity to upload
+    64                          ;     VERA_UPLOAD_ZP_ADDR = address to upload
+    65                          ;     VERA_UPLOAD_ZP_SIZE = chunk size
+    66                          ; alter:
+    67                          ;     a = last addr low byte
+    68                          ;     x = 0
+    69                          ;     y = 0
+    70                          vera_sr_upload:
+    71                              ldy #0
+    72                          -       lda (VERA_UPLOAD_ZP_ADDR),Y ; load the next byte                    \
+    73                                  sta vera_data_0             ; store the byte in vera data port       |
+    74                                  iny                         ; inc y to read the next byte            |- upload a chunk
+    75                                  tya                         ; transfer y to a                        |
+    76                                  cmp VERA_UPLOAD_ZP_SIZE     ; if a != chunk_size                     |
+    77                                  bne -                       ; then: continue the loop               /
+    78                                  lda (VERA_UPLOAD_ZP_ADDR),Y ; else: load the last byte of the chunk
+    79                                  sta vera_data_0             ; store the last byte in vera data port
+    80                                  ldy #0                      ; reset y register
+    81                                  lda VERA_UPLOAD_ZP_ADDR     ; get addr.lo                           \
+    82                                  sec                         ; set carry flag (acting as +1)          |
+    83                                  adc VERA_UPLOAD_ZP_SIZE     ; add packet size to the address (+1)    |
+    84                                  sta VERA_UPLOAD_ZP_ADDR     ; set addr.lo                            |- increment pointer
+    85                                  bcc +                       ; branch on carry clear                  |
+    86                                  inc VERA_UPLOAD_ZP_ADDR+1   ; increment addr.hi                     /
+    87                          +       dex                         ; dec x to check when we have finished 
+    88                                  bne -                       ; exit loop when finished
+    89                              rts
+    90                          
+    91                          vera_sr_end:
+    92                          }
+    93                          ; end of fn_vera_init_subroutines
+    94                          
+    95                          
+    96                          ; ########################################################
+    97                          ; ### CONTROL ############################################
+    98                          ; ########################################################
+    99                          
+   100                          
+   101                          vera_ctrl_mask_reset  = %10000000
+   102                          vera_ctrl_mask_dcsel  = %00000010
+   103                          vera_ctrl_mask_addrsel= %00000001
+   104                          !macro fn_vera_set_ctrl .value {
+   105                              lda #.value
+   106                              sta vera_ctrl
+   107                          }
+   108                          
+   109                          vera_video_mask_current= %10000000
+   110                          vera_video_mask_sprite = %01000000
+   111                          vera_video_mask_layer1 = %00100000
+   112                          vera_video_mask_layer0 = %00010000
+   113                          vera_video_mask_chroma = %00000100
+   114                          vera_video_mask_output_vga  = %00000001
+   115                          vera_video_mask_output_ntsc = %00000010
+   116                          vera_video_mask_output_rgb  = %00000011
+   117                          !macro fn_vera_video_enable .mask {
+   118                              +fn_vera_set_ctrl 0
+   119                              lda vera_video
+   120                              ora #.mask
+   121                              sta vera_video
+   122                          }
+   123                          !macro fn_vera_video_disable .mask {
+   124                              +fn_vera_set_ctrl 0
+   125                              lda vera_video
+   126                              and #!.mask
+   127                              sta vera_video
+   128                          }
+   129                          !macro fn_vera_set_video .value {
+   130                              +fn_vera_set_ctrl 0
+   131                              lda #.value
+   132                              sta vera_video
+   133                          }
+   134                          
+   135                          
+   136                          ; ########################################################
+   137                          ; ### LAYERS #############################################
+   138                          ; ########################################################
+   139                          
+   140                          
+   141                          vera_layer_config_map_height_32tiles = %00000000
+   142                          vera_layer_config_map_height_64tiles = %01000000
+   143                          vera_layer_config_map_height_128tiles= %10000000
+   144                          vera_layer_config_map_height_256tiles= %11000000
+   145                          vera_layer_config_map_width_32tiles  = %00000000
+   146                          vera_layer_config_map_width_64tiles  = %00010000
+   147                          vera_layer_config_map_width_128tiles = %00100000
+   148                          vera_layer_config_map_width_256tiles = %00110000
+   149                          vera_layer_config_t256c              = %00001000
+   150                          vera_layer_config_bitmap             = %00000100
+   151                          vera_layer_config_color_depth_1bpp   = %00000000
+   152                          vera_layer_config_color_depth_2bpp   = %00000001
+   153                          vera_layer_config_color_depth_4bpp   = %00000010
+   154                          vera_layer_config_color_depth_8bpp   = %00000011
+   155                          !macro fn_vera_set_layer0_config .config {
+   156                              lda #.config
+   157                              sta vera_layer0_config
+   158                          }
+   159                          !macro fn_vera_set_layer1_config .config {
+   160                              lda #.config
+   161                              sta vera_layer1_config
+   162                          }
+   163                          
+   164                          !macro fn_vera_set_layer0_mapbase .mapbase {
+   165                              lda #.mapbase
+   166                              sta vera_layer0_mapbase
+   167                          }
+   168                          !macro fn_vera_set_layer1_mapbase .mapbase {
+   169                              lda #.mapbase
+   170                              sta vera_layer1_mapbase
+   171                          }
+   172                          
+   173                          vera_layer_tilebase_tile_height_8px = %00000000
+   174                          vera_layer_tilebase_tile_height_16px= %00000010
+   175                          vera_layer_tilebase_tile_width_8px  = %00000000
+   176                          vera_layer_tilebase_tile_width_16px = %00000001
+   177                          !macro fn_vera_set_layer0_tilebase .tilebase {
+   178                              lda #.tilebase
+   179                              sta vera_layer0_tilebase
+   180                          }
+   181                          !macro fn_vera_set_layer1_tilebase .tilebase {
+   182                              lda #.tilebase
+   183                              sta vera_layer1_tilebase
+   184                          }
+   185                          
+   186                          
+   187                          ; ########################################################
+   188                          ; ### FUNCTIONS ##########################################
+   189                          ; ########################################################
+   190                          
+   191                          ; Set the provided adress to Vera
+   192                          ; params:
+   193                          ;     8b  stride_bank: %iiiis--b
+   194                          ;          i = increment value, as a power of 2
+   195                          ;          s = increment's sign (neg = 1)
+   196                          ;          b = bank
+   197                          ;     16b address: Address to set
+   198                          !macro fn_vera_set_address .stride_bank, .address {
+   199                              lda #.stride_bank
+   200                              sta vera_stride_bank
+   201                              lda #<.address
+   202                              sta vera_low_addr
+   203                              lda #>.address
+   204                              sta vera_high_addr
+   205                          }
+   206                          !macro fn_vera_set_address_1 .stride_bank, .address {
+   207                              +fn_vera_set_ctrl vera_ctrl_mask_addrsel
+   208                              lda #.stride_bank
+   209                              sta vera_stride_bank
+   210                              lda #<.address
+   211                              sta vera_low_addr
+   212                              lda #>.address
+   213                              sta vera_high_addr
+   214                              +fn_vera_set_ctrl 0
+   215                          }
+   216                          
+   217                          ; Register a sprite into Vera's VRAM
+   218                          ; params:
+   219                          ;     8b  index: sprite index
+   220                          ;     16b addr_mode: $MAAA
+   221                          ;          M = %m--- (three bits are unused)
+   222                          ;          AAA = address from bit 16 to bit 5 (you need to shift the actual address by 5 on the right)
+   223                          ;     16b position_x/y: sprite position on screen
+   224                          ;     8b  collision_flip: %cccczzvh 
+   225                          ;          c = collision mask
+   226                          ;          z = z depth
+   227                          ;          v/h = vertical or horizontal flip
+   228                          vera_sprite_mode_4bpp = %00000000
+   229                          vera_sprite_mode_8bpp = %10000000
+   230                          vera_sprite_zdepth_disabled     = %00000000
+   231                          vera_sprite_zdepth_behind_layer0= %00000100
+   232                          vera_sprite_zdepth_behind_layer1= %00001000
+   233                          vera_sprite_zdepth_above_layer1 = %00001100
+   234                          vera_sprite_flip_v  = %00000010
+   235                          vera_sprite_flip_h  = %00000001
+   236                          vera_sprite_width_8px  = %00000000
+   237                          vera_sprite_width_16px = %00010000
+   238                          vera_sprite_width_32px = %00100000
+   239                          vera_sprite_width_64px = %00110000
+   240                          vera_sprite_height_8px = %00000000
+   241                          vera_sprite_height_16px= %01000000
+   242                          vera_sprite_height_32px= %10000000
+   243                          vera_sprite_height_64px= %11000000
+   244                          !macro fn_vera_register_sprite .index, .addr_mode, .position_x, .position_y, .collision_flip, .size_palette  {
+   245                              +fn_vera_set_address %00010001, ($FC00+(.index*8)) ; increment 1, bank 1, address FC00 + index*8
+   246                              lda #<.addr_mode
+   247                              sta vera_data_0
+   248                              lda #>.addr_mode
+   249                              sta vera_data_0
+   250                          
+   251                              lda #<.position_x
+   252                              sta vera_data_0
+   253                              lda #>.position_x
+   254                              sta vera_data_0
+   255                          
+   256                              lda #<.position_y
+   257                              sta vera_data_0
+   258                              lda #>.position_y
+   259                              sta vera_data_0
+   260                          
+   261                              lda #.collision_flip
+   262                              sta vera_data_0
+   263                              lda #.size_palette
+   264                              sta vera_data_0
+   265                          }
+   266                          
+   267                          ; Change the x position of a sprite with the x and y registers
+   268                          ; params:
+   269                          ;     8b .index: sprite index
+   270                          ;     16b XXYY: new x position
+   271                          ;         X = X register (hi)
+   272                          ;         Y = Y register (lo)
+   273                          !macro fn_vera_update_sprite_x .index {
+   274                              +fn_vera_set_address %00010001, ($FC02+(.index*8)) ; increment 1, bank 1, address FC02 + index*8
+   275                              sty vera_data_0
+   276                              stx vera_data_0
+   277                          }
+   278                          ; Change the y position of a sprite with the x and y registers
+   279                          ; params:
+   280                          ;     8b .index: sprite index
+   281                          ;     16b XXYY: new y position
+   282                          ;         X = X register (hi)
+   283                          ;         Y = Y register (lo)
+   284                          !macro fn_vera_update_sprite_y .index {
+   285                              +fn_vera_set_address %00010001, ($FC04+(.index*8)) ; increment 1, bank 1, address FC04 + index*8
+   286                              sty vera_data_0
+   287                              stx vera_data_0
+   288                          }
+   289                          
+   290                          
+   291                          !macro fn_vera_upload_set_data_addr .data_addr {
+   292                              lda #<.data_addr
+   293                              sta VERA_UPLOAD_ZP_ADDR
+   294                              lda #>.data_addr
+   295                              sta VERA_UPLOAD_ZP_ADDR+1
+   296                          }
+   297                          
+   298                          ; Uploads data to Vera at a specified location
+   299                          ; params:
+   300                          ;     16b data_addr: location of the data to upload
+   301                          ;     8b  vera_stride: %iiiis--b
+   302                          ;          i = increment value, as a power of 2
+   303                          ;          s = increment's sign (neg = 1)
+   304                          ;          b = bank
+   305                          ;     16b vera_addr: starting position in Vera's address space
+   306                          ;     8b  chunk_size: Size of a packet+1
+   307                          ;     8b  chunk_qty: how many packets to send
+   308                          !macro fn_vera_upload .data_addr, .vera_stride, .vera_addr, .chunk_size, .chunk_qty {
+   309                              ; setup target address
+   310                              +fn_vera_set_address .vera_stride, .vera_addr
+   311                              +fn_vera_direct_upload .data_addr, .chunk_size, .chunk_qty
+   312                          }
+   313                          
+   314                          ; uploads data to Vera without changing the target address
+   315                          ; @see !macro fn_vera_upload
+   316                          VERA_UPLOAD_ZP_ADDR = $70
+   317                          VERA_UPLOAD_ZP_SIZE = $72
+   318                          !macro fn_vera_direct_upload .data_addr, .chunk_size, .chunk_qty {
+   319                              ; setup data address
+   320                              +fn_vera_upload_set_data_addr .data_addr
+   321                              ; setup chunk sizes
+   322                              lda #.chunk_size
+   323                              sta VERA_UPLOAD_ZP_SIZE
+   324                              ; setup subroutine
+   325                              ldx #.chunk_qty
+   326                              jsr vera_sr_upload
+   327                          }
+   328                          
+   329                          ; Uploads data to Vera at current location
+   330                          ; params:
+   331                          ;     16b data_addr: location of the data to upload
+   332                          ;     8b  chunk_size: Size of a packet+1
+   333                          ; alter:
+   334                          ;     a = last byte uploaded
+   335                          ;     x = 0
+   336                          ;     y = size of chunk
+   337                          !macro fn_vera_upload_simple .data_addr, .chunk_size {
+   338                              ldx .chunk_size
+   339                              ldy #0
+   340                          -       lda (.data_addr),Y
+   341                                  sta vera_data_0
+   342                                  iny
+   343                                  dex
+   344                                  bne -
+   345                              rts
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+     5                          
+
+; ******** Source: ..\lib\math.asm
+     1                          ; Increment for 16 bit values
+     2                          ; params
+     3                          ;   .address:   address of a 16-bit value
+     4                          !macro inc16 .address {
+     5                              inc .address        ; increment low byte
+     6                              bne +               ; if byte reached zero (an overflow occured)
+     7                              inc .address+1      ; increment high byte
+     8                          +
+     9                          }
+    10                          
+    11                          ; Decrement for 16 bit values
+    12                          ; params
+    13                          ;   .address:   address of a 16-bit value
+    14                          !macro dec16 .address {
+    15                              lda .address        ; load low byte
+    16                              bne +               ; if byte is zero
+    17                              dec .address+1      ; decrement high byte
+    18                          +   dec .address        ; after that, decrement low byte
+    19                          }
+    20                          
+    21                          ; Add with Carry for 16 bit values of a 8 bit value
+    22                          ; no carry operation is performed before and after the actual addition
+    23                          ; params
+    24                          ;   .address:   address of a 16-bit value
+    25                          ;   .value:     8-bit value
+    26                          !macro adc16 .address, .value {
+    27                              lda .address        ; load low byte
+    28                              adc #.value         ; add the value
+    29                              bcc +               ; if the carry is set
+    30                              inc .address+1      ; increment the high byte
+    31                          +   sta .address        ; store the low byte
+    32                          }
+    33                          
+    34                          ; Substract with Carry for 16 bit values of a 8 bit value
+    35                          ; no carry operation is performed before and after the actual substraction
+    36                          ; params
+    37                          ;   .address:   address of a 16-bit value
+    38                          ;   .value:     8-bit value
+    39                          !macro sbc16 .address, .value {
+    40                              lda .address        ; load low byte
+    41                              sbc #.value         ; substract the value
+    42                              bcs +               ; if the carry is cleared
+    43                              dec .address+1      ; decrement the high byte
+    44                          +   sta .address        ; store the low byte
+    45                          }
+    46                          
+    47                          ; Add with Carry for 16 bit values of a 16 bit value
+    48                          ; no carry operation is performed before and after the actual addition
+    49                          ; params
+    50                          ;   .address:   address of a 16-bit value
+    51                          ;   .value:     16-bit value
+    52                          !macro adc16_16 .address, .value {
+    53                              lda .address        ; \
+    54                              adc #<.value        ;  |- classic addition of low byte
+    55                              sta .address        ; /
+    56                              lda .address+1      ; \
+    57                              adc #>.value        ;  |- classic addition of high byte (the carry will do its job)
+    58                              sta .address+1      ; /
+    59                          }
+    60                          
+    61                          ; Substract with Carry for 16 bit values of a 16 bit value
+    62                          ; no carry operation is performed before and after the actual substraction
+    63                          ; params
+    64                          ;   .address:   address of a 16-bit value
+    65                          ;   .value:     16-bit value
+    66                          !macro sbc16_16 .address, .value {
+    67                              lda .address        ; \
+    68                              sbc #<.value        ;  |- classic substraction of low byte
+    69                              sta .address        ; /
+    70                              lda .address+1      ; \
+    71                              sbc #>.value        ;  |- classic substraction of high byte (the carry will do its job)
+    72                              sta .address+1      ; /
+    73                          }
+    74                          
+    75                          ; Multiply a value with another one
+    76                          ; params
+    77                          ;   .value:         8-bit value
+    78                          ;   .multiplier:    8-bit value
+    79                          !macro multiply .value, .multiplier {
+    80                              lda #.value
+    81                              +mul .multiplier
+    82                          }
+    83                          
+    84                          ; Accumulator Multiply
+    85                          ; params
+    86                          ;   Accumulator:    8-bit value
+    87                          ;   .multiplier:    8-bit value
+    88                          !macro mul .multiplier {
+    89                              tax
+    90                              lda #0
+    91                          -   clc
+    92                              adc #.multiplier
+    93                              dex 
+    94                              bne -
+    95                          }
+    96                          
+    97                          ; Divide a value with another one
+    98                          ; params
+    99                          ;   .dividend:   8-bit value
+   100                          ;   .divider:    8-bit value
+   101                          !macro divide .dividend, .divider {
+   102                              lda #.dividend      ; load the dividend
+   103                              +dva .divider
+   104                          }
+   105                          
+   106                          ; Divide Accumulator
+   107                          ; params
+   108                          ;   Accumulator:    8-bit value
+   109                          ;   .divider:       8-bit value
+   110                          !macro dva .divider {
+   111                              ; assuming the accumulator contains the dividend and the divider is not zero
+   112                              ldx #0              ; reset the x register
+   113                              sec                 ; set the carry (for the following substractions)
+   114                          -   inx                 ; incement x
+   115                              sbc #.divider       ; substract the divider
+   116                              bcs -               ; if the carry is cleared (the result is now positive)
+   117                              dex
+   118                              txa                 ; transfer x to accumulator
+   119                          }
+   120                          
+   121                          ; Modulate a value with another one
+   122                          ; params
+   123                          ;   .value:   8-bit value
+   124                          ;   .base:    8-bit value
+   125                          !macro modulo .value, .base {
+   126                              lda #.value     ; load the value
+   127                              +mda .base
+   128                          }
+   129                          
+   130                          ; Modulate Accumulator
+   131                          ; params
+   132                          ;   Accumulator:    8-bit value
+   133                          ;   .base:          8-bit value
+   134                          !macro mda .base {
+   135                              ; assuming the accumulator contains the main value and the base is not zero
+   136                              sec             ; set the carry (for the following substractions)
+   137                          -   sbc #.base      ; substraction loop
+   138                              bcs -           ; until the carry is cleared (the result is now negative)
+   139                              adc #.base      ; restore the value to the positive side
+   140                          }
+   141                          
+   142                          ; Square root of a value
+   143                          ; see : http://6502org.wikidot.com/software-math-sqrt
+   144                          ; params
+   145                          ;   .value:     address to a 16-bit value
+   146                          ;   .result:    address to a 8-bit value (output)
+   147                          ;   .remainder: address to a 8-bit value (output)
+   148                          ; additional output:
+   149                          ;   Flag Carry: 9th bit of the remainder
+   150                          !macro squareroot .value, .result, .remainder {
+   151                              stz .result
+   152                              stz .remainder
+   153                              ldx #8
+   154                          -   sec
+   155                              lda .value+1
+   156                              sbc #$40
+   157                              tay
+   158                              lda .remainder
+   159                              sbc .result
+   160                              bcc +
+   161                              sty .value+1
+   162                              sta .remainder
+   163                          +   rol .result
+   164                              asl .value
+   165                              rol .value+1
+   166                              rol .remainder
+   167                              asl .value
+   168                              rol .value+1
+   169                              rol .remainder
+   170                              dex
+   171                              bne -
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+     6                          
+     7                          
+
+; ******** Source: paper.asm
+     1                          ; This file serves as paperwork of the game's design
+     2                          ; it contains variables, explications and other neat stuff
+     3                          ;
+     4                          ; VIDEO DETAILS :
+     5                          ; screensize: 160x120
+     6                          ; Background: unused
+     7                          ;
+     8                          ; Layer 0   : map 32x32 4bpp
+     9                          ;       tile data: $1 0000
+    10                          ;       map data : $1 8000
+    11                          vram_layer0_tilebase_b  = $01
+    12                          vram_layer0_tilebase    = $0000
+    13                          vram_layer0_mapbase_b   = $01
+    14                          vram_layer0_mapbase     = $8000
+    15                          ;
+    16                          ; Layer 1   : text 32x32 1bpp
+    17                          ;       tile data: system default
+    18                          ;       map data : $0 0000
+    19                          ;vram_layer1_tilebase = 
+    20                          vram_layer1_mapbase_b   = $00
+    21                          vram_layer1_mapbase     = $0000
+    22                          ;
+    23                          ; Sprites   :
+    24                          ;       player : 8x16 $0 8000
+    25                          vram_sprites_base_b     = $00
+    26                          vram_sprites_base       = $8000
+    27                          ;
+    28                          ;
+    29                          ; GAME DETAILS :
+    30                          ; 
+    31                          ; 
+    32                          
+    33                          
+    34                          
+    35                          ; ADDRESSES AND STUFF
+    36                          ; $0400 to $07FF
+    37                          kernal_irq = $9EFE
+    38                          
+    39                          ; CONSTANTS
+    40                          
+    41                          ; TEMPORARY VARIABLES
+    42                          ; $02 to $21
+    43                          
+    44                          
+    45                          ; VARIABLES
+    46                          ; $22 to $7F
+    47                          game_mode = $7F
+    48                          
+    49                          !macro game_video_init {
+    50                          ;    .layer0_mapbase = ((vram_layer0_mapbase_b <<< 16) + vram_layer0_mapbase) >>> 9
+    51                          ;    .layer0_tilebase = (vram_layer0_tilebase_b <<< 16) >>> 9
+    52                          
+    53                              ; setup map layer
+    54                          ;    +fn_vera_set_layer0_config vera_layer_config_map_width_32tiles | vera_layer_config_map_height_32tiles | vera_layer_config_color_depth_4bpp
+    55                          ;    +fn_vera_set_layer0_tilebase .layer0_tilebase | vera_layer_tilebase_tile_height_16px | vera_layer_tilebase_tile_width_16px
+    56                          ;    +fn_vera_set_layer0_mapbase .layer0_mapbase
+    57                              ; setup text layer
+    58                          ;    +fn_vera_set_layer1_config vera_layer_config_map_width_32tiles | vera_layer_config_map_height_32tiles | vera_layer_config_color_depth_1bpp
+    59                          
+    60                          ;    lda #64
+    61                          ;    sta vera_vscale
+    62                          ;    lda #51
+    63                          ;    sta vera_hscale
+    64                              +fn_print str_white_on_black
+    65                          }
+    66                          
+    67                          !macro game_init {
+    68                              stz game_mode
+    69                          
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+     8                          
+     9                          
+
+; ******** Source: macros\screen.asm
+     1                          !macro fn_locate .x, .y, .string_ptr {
+     2                              lda #<.string_ptr
+     3                              sta x16_r0_l
+     4                              lda #>.string_ptr
+     5                              sta x16_r0_h
+     6                              lda #.x
+     7                              sta x16_r1
+     8                              lda #.y
+     9                              sta x16_r1+1
+    10                              jsr locate
+    11                          }
+    12                          
+    13                          !macro fn_print .string_ptr {
+    14                              lda #<.string_ptr
+    15                              sta x16_r0_l
+    16                              lda #>.string_ptr
+    17                              sta x16_r0_h
+    18                              jsr print
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+    10                          
+    11                          
+    12                          ; =======================================================================================================
+    13                          ; ###  #####   ######  ######  ######  ######  ######  #####   ######  ######  ##########################
+    14                          ; ###  ##  ##  ##  ##  ##  ##    ##    ##        ##    ##  ##  ##  ##  ##  ##  ##########################
+    15                          ; ###  ####    ##  ##  ##  ##    ##    ######    ##    ####    ######  ######  ##########################
+    16                          ; ###  ##  ##  ##  ##  ##  ##    ##        ##    ##    ##  ##  ##  ##  ##      ##########################
+    17                          ; ###  #####   ######  ######    ##    ######    ##    ##  ##  ##  ##  ##      ##########################
+    18                          ; =======================================================================================================
+    19                          
+    20  0801 0b0801009e323036...    +basic_startup 
+    21  080d 4c3308a000b1708d...    +fn_vera_init_subroutines
+    22  0833 a93d8502a9098503...    +game_video_init 
+    23  083e 647f                   +game_init
+    24                          
+    25                              ;setup player sprite
+    26                          ;    +fn_vera_upload player, $10+vram_sprites_base_b, vram_sprites_base, player_packet_size, player_packet_qty    ; $11 = increment 1, bank 0, $0000 = address, $FF = size+1, $01 = 1 times
+    27                          ;    +fn_vera_register_sprite $00, $0400, $0011, $0011, vera_sprite_zdepth_above_layer1, vera_sprite_width_16px | vera_sprite_height_32px; .index, .addr_mode, .pos_x, .pos_y, .collision_flip, .size_palette
+    28                          ;    +fn_vera_set_video vera_video_mask_sprite | vera_video_mask_layer0 | vera_video_mask_layer1 | vera_video_mask_output_vga
+    29                          
+    30                          ;    +fn_vera_upload tileset, $10+vram_layer0_tilebase_b, vram_layer0_tilebase, tileset_tilesize, tileset_qty
+    31                          
+    32  0840 208008                 jsr clear_layer0
+    33  0843 20bd08                 jsr clear_layer1
+    34                          ;    +fn_draw_map vram_layer0_mapbase_b, vram_layer0_mapbase, firstmap
+    35                          
+    36  0846 a9408502a9098503...    +fn_locate 2, 2, str_press_left
+    37                          
+    38  0859 ad14038dfe9ead15...    +fn_irq_init kernal_irq, game_loop
+    39                          
+    40                          lp:
+    41  086f a57f                   lda game_mode
+    42  0871 c9ff                   cmp #$FF
+    43  0873 d0fa                   bne lp
+    44  0875 a9fe8d1403a99e8d...    +fn_irq_restore kernal_irq
+    45  087f 60                     rts
+    46                          
+    47                          ; =======================================================================================================
+    48                          ; ###  ######  ##  ##  #####   #####   ######  ##  ##  ######  ##  ##    ##  ######  ######  ############
+    49                          ; ###  ##      ##  ##  ##  ##  ##  ##  ##  ##  ##  ##    ##    ##  ####  ##  ##      ##      ############
+    50                          ; ###  ######  ##  ##  ####    ####    ##  ##  ##  ##    ##    ##  ## ## ##  #####   ######  ############
+    51                          ; ###      ##  ##  ##  ##  ##  ##  ##  ##  ##  ##  ##    ##    ##  ##  ####  ##          ##  ############
+    52                          ; ###  ######  ######  #####   ##  ##  ######  ######    ##    ##  ##    ##  ######  ######  ############
+    53                          ; =======================================================================================================
+    54                          
+    55                          
+
+; ******** Source: routines\screen.asm
+     1                          !ifndef is_main {
+     2                              !src "../../lib/x16.asm"
+     3                              !src "../../lib/vera.asm"
+     4                              !src "../../lib/math.asm"
+     5                              !src "../paper.asm"
+     6                              *= $801
+     7                          }
+     8                          
+     9                          ; =======================================================================================================
+    10                          ; ###  CLEARING  ########################################################################################
+    11                          ; =======================================================================================================
+    12                          
+    13                          clear_layer0:
+    14                              ; set screen tiles to 
+    15  0880 a9218d229fa9008d...    +fn_vera_set_address $20 + vram_layer0_mapbase_b, vram_layer0_mapbase
+    16  088f a900                   lda #$00
+    17  0891 a020                   ldy #$20
+    18                          clear_layer0_char_lp:
+    19  0893 a200                   ldx #0
+    20  0895 8d239f             -   sta vera_data_0
+    21  0898 ca                     dex
+    22  0899 d0fa                   bne -
+    23  089b 88                     dey
+    24  089c d0f5                   bne clear_layer0_char_lp
+    25                              ; set screen colors to transparent
+    26  089e a9218d229fa9018d...    +fn_vera_set_address $20 + vram_layer0_mapbase_b, vram_layer0_mapbase+1
+    27  08ad a900                   lda #$00
+    28  08af a020                   ldy #$20
+    29                          clear_layer0_color_lp:
+    30  08b1 a200                   ldx #0
+    31  08b3 8d239f             -   sta vera_data_0
+    32  08b6 ca                     dex
+    33  08b7 d0fa                   bne -
+    34  08b9 88                     dey
+    35  08ba d0f5                   bne clear_layer0_color_lp
+    36  08bc 60                     rts
+    37                          
+    38                          clear_layer1:
+    39                              ; set screen chars to spaces
+    40  08bd a9208d229fa9008d...    +fn_vera_set_address $20 + vram_layer1_mapbase_b, vram_layer1_mapbase
+    41  08cc a920                   lda #$20
+    42  08ce a020                   ldy #$20
+    43                          clear_layer1_char_lp:
+    44  08d0 a200                   ldx #0
+    45  08d2 8d239f             -   sta vera_data_0
+    46  08d5 ca                     dex
+    47  08d6 d0fa                   bne -
+    48  08d8 88                     dey
+    49  08d9 d0f5                   bne clear_layer1_char_lp
+    50                              ; set screen colors to white on transparent
+    51  08db a9208d229fa9018d...    +fn_vera_set_address $20 + vram_layer1_mapbase_b, vram_layer1_mapbase+1
+    52  08ea a901                   lda #$01
+    53  08ec a020                   ldy #$20
+    54                          clear_layer1_color_lp:
+    55  08ee a200                   ldx #0
+    56  08f0 8d239f             -   sta vera_data_0
+    57  08f3 ca                     dex
+    58  08f4 d0fa                   bne -
+    59  08f6 88                     dey
+    60  08f7 d0f5                   bne clear_layer1_color_lp
+    61  08f9 60                     rts
+    62                          
+    63                          ; =======================================================================================================
+    64                          ; ###  PRINTING  ########################################################################################
+    65                          ; =======================================================================================================
+    66                          
+    67                          ; moves the cursor and print a string
+    68                          ; params:
+    69                          ;     r0: pointer to the string
+    70                          ;     r1: cursor location
+    71                          locate:
+    72  08fa da                     phx         ; \ stash x and y
+    73  08fb 5a                     phy         ; /
+    74  08fc 18                     clc             ; clear carry, to SET the cursor
+    75  08fd a404                   ldy x16_r1      ; \ load the location
+    76  08ff a605                   ldx x16_r1+1    ; /
+    77  0901 20f0ff                 jsr PLOT        ; move the cursor
+    78  0904 fa                     plx         ; \
+    79  0905 7a                     ply         ; / retrieve x and y
+    80                          
+    81                          ; print a string
+    82                          ; params:
+    83                          ;     r0: pointer to the string
+    84                          print:
+    85  0906 b202               -   lda (x16_r0)    ; print loop
+    86  0908 f00c                   beq +           ; if the character is byte $00 we jump on the first '+' label after this line
+    87  090a 20d2ff                 jsr CHROUT      ; print character on screen
+    88  090d e602d002e603           +inc16 x16_r0   ; increment pointer
+    89  0913 4c0609                 jmp -           ; end of the loop, jump to the first '-' label before this line
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+    56  0916 60                 
+    57                          
+    58                          
+    59                          
+    60                          ; =======================================================================================================
+    61                          ; ###  ######  ######  ##     ##  ######      ##      ######  ######  ######  ###########################
+    62                          ; ###  ##      ##  ##  #### ####  ##          ##      ##  ##  ##  ##  ##  ##  ###########################
+    63                          ; ###  ## ###  ######  ## ### ##  #####       ##      ##  ##  ##  ##  ######  ###########################
+    64                          ; ###  ##  ##  ##  ##  ##  #  ##  ##          ##      ##  ##  ##  ##  ##      ###########################
+    65                          ; ###  ######  ##  ##  ##     ##  ######      ######  ######  ######  ##      ###########################
+    66                          ; =======================================================================================================
+    67                          
+    68                          game_loop:
+    69  0917 ad279f                 lda vera_isr
+    70  091a 2901                   and #vera_isr_mask_vsync
+    71  091c d003                   bne +
+    72  091e 4c3a09                 jmp irq_done
+    73                          +
+    74                          
+    75                          handle_player_input:
+    76                              ; Player Inputs
+    77  0921 a900                   lda #0
+    78  0923 2056ff                 jsr joystick_get        ; fetch joy0
+    79  0926 a8                     tay                     ; store the value into y
+    80  0927 2902                   and #joystick_mask_left ; check left button
+    81  0929 d000                   bne +                   ; or skip
+    82                          
+    83                              ; left is pressed
+    84                              ;+fn_print str_l
+    85                              ;lda #$FF
+    86                              ;sta game_mode
+    87                          
+    88  092b 98                 +   tya
+    89  092c 2901                   and #joystick_mask_right; check right button
+    90  092e d000                   bne +                   ; or skip
+    91                          
+    92                              ; right is pressed
+    93                          
+    94  0930 98                 +   tya
+    95  0931 2904                   and #joystick_mask_down ; check down button
+    96  0933 d000                   bne +                   ; or skip
+    97                          
+    98                              ; down is pressed
+    99                          
+   100  0935 98                 +   tya
+   101  0936 2908                   and #joystick_mask_up   ; check up button
+   102  0938 d000                   bne +                   ; or skip
+   103                          
+   104                              ; up is presed
+   105                          
+   106                          +
+   107                          
+   108                          update_game:
+   109                          
+   110                          
+   111                          irq_done:
+   112  093a 6cfe9e                 jmp (kernal_irq)
+   113                          
+   114                          ; =======================================================================================================
+   115                          ; ###  #####   ######  ######  ######  ##  ##  #####   ######  ######  ######  ##########################
+   116                          ; ###  ##  ##  ##      ##      ##  ##  ##  ##  ##  ##  ##      ##      ##      ##########################
+   117                          ; ###  ####    #####   ######  ##  ##  ##  ##  ####    ##      #####   ######  ##########################
+   118                          ; ###  ##  ##  ##          ##  ##  ##  ##  ##  ##  ##  ##      ##          ##  ##########################
+   119                          ; ###  ##  ##  ######  ######  ######  ######  ##  ##  ######  ######  ######  ##########################
+   120                          ; =======================================================================================================
+   121                          
+
+; ******** Source: resources\strings.asm
+     1                          !ifndef is_main {
+     2                              !src "../../lib/x16.asm"
+     3                              !src "../../lib/vera.asm"
+     4                              !src "../paper.asm"
+     5                              *= $801
+     6                          }
+     7                          
+     8  093d 900105             str_white_on_black !pet PET_COLOR_BLACK, PET_COLOR_SWAP, PET_COLOR_WHITE
+     9                          
+    10  0940 5052455353204c45...str_press_left !pet "press left",PET_NULL
+
+; ******** Source: c:\Users\Vincent\ownCloud\X16\src\deckgame\main.asm
+   122  094b 4c00               
+   123                          ;!src "resources/sprites.asm"
+   124                          ;!src "resources/tiles.asm"

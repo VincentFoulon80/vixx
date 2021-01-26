@@ -1,0 +1,12 @@
+al C:0001 .vram_layer0_mapbase_b
+al C:0001 .vram_layer0_tilebase_b
+al C:0000 .vram_layer1_mapbase_b
+al C:8000 .vram_sprites_base
+al C:0000 .vram_layer1_mapbase
+al C:8000 .vram_layer0_mapbase
+al C:9efe .kernal_irq
+al C:0000 .vram_sprites_base_b
+al C:0000 .vram_layer0_tilebase
+al C:007f .game_mode
+
+
