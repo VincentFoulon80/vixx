@@ -97,24 +97,15 @@ main_lp:
     +fn_irq_restore kernal_irq
     rts
 +
-    lda wait_frame
-    bne main_lp
 
-    ; lda frame_count     ; \
-    ; and #$01            ;  | # TEMPORARY
-    ; bne +               ;  |
-    ; lda #id_mov_incr    ;  |
-    ; sta r_obj_t         ;  |- insert bullets on the fly
-    ; lda #$02            ;  |
-    ; sta r_obj_p         ;  |
-    ; ;lda #$6F            ;  |
-    ; jsr rng
-    ; sta r_obj_x         ;  |
-    ; lda #$00            ;  |
-    ; sta r_obj_y         ;  |
-    ; jsr insert_object   ; /
     ;jsr optimize_object_count
-+
+    lda wait_frame
+    and #WFRAME_MOVE
+    beq +
+    jmp update_collisions_end
++   lda wait_frame
+    ora #WFRAME_MOVE
+    sta wait_frame
 update_game:
     lda #<obj_table         ; \
     sta r_obj_a             ;  |
@@ -177,18 +168,17 @@ update_collisions:
     +adc16 r_obj_a, obj_size;  |/
     ply                     ;  |
     dey                     ;  |- for y=0 to obj_count
-    beq .update_colls_end   ;  |
+    beq update_collisions_end; |
     phy                     ; /
     jsr handle_touched
-    ;bcs .update_colls_end
+    ;bcs update_collisions_end
     jsr handle_graze
     jmp -
 
-.update_colls_end:
+update_collisions_end:
 
 !src "routines/choregraphy.asm"
 
-    inc wait_frame
     jmp main_lp
 
 ; =======================================================================================================
@@ -344,17 +334,78 @@ irq_done:
 
 !byte CHOR_OP_LDA, $08
 .choregraphy_slide_explosion:
-!byte CHOR_OP_SPS, $4F,$20
+!byte CHOR_OP_SPS, $4F, $20
 !byte CHOR_OP_INS, id_mov_incr, $04
 !byte CHOR_OP_INS, id_mov_incr, $24
 !byte CHOR_OP_INS, id_mov_dcic, $24
-!byte CHOR_OP_SPS, $8F,$20
+!byte CHOR_OP_SPS, $8F, $20
 !byte CHOR_OP_INS, id_mov_incr, $04
 !byte CHOR_OP_INS, id_mov_incr, $24
 !byte CHOR_OP_INS, id_mov_dcic, $24
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $08
 !byte CHOR_OP_JAN, <.choregraphy_slide_explosion, >.choregraphy_slide_explosion
+
+!byte CHOR_OP_SPS, $08, $30
+!byte CHOR_OP_INS, id_mov_incr, $10
+!byte CHOR_OP_INS, id_mov_incr, $20
+!byte CHOR_OP_INS, id_mov_incr, $30
+!byte CHOR_OP_INS, id_mov_incr, $40
+!byte CHOR_OP_INS, id_mov_incr, $50
+!byte CHOR_OP_SPS, $08, $50
+!byte CHOR_OP_INS, id_mov_incr, $10
+!byte CHOR_OP_INS, id_mov_incr, $20
+!byte CHOR_OP_INS, id_mov_incr, $30
+!byte CHOR_OP_INS, id_mov_incr, $40
+!byte CHOR_OP_INS, id_mov_incr, $50
+!byte CHOR_OP_SPS, $08, $70
+!byte CHOR_OP_INS, id_mov_incr, $10
+!byte CHOR_OP_INS, id_mov_incr, $20
+!byte CHOR_OP_INS, id_mov_incr, $30
+!byte CHOR_OP_INS, id_mov_incr, $40
+!byte CHOR_OP_INS, id_mov_incr, $50
+!byte CHOR_OP_SPS, $08, $90
+!byte CHOR_OP_INS, id_mov_incr, $10
+!byte CHOR_OP_INS, id_mov_incr, $20
+!byte CHOR_OP_INS, id_mov_incr, $30
+!byte CHOR_OP_INS, id_mov_incr, $40
+!byte CHOR_OP_INS, id_mov_incr, $50
+!byte CHOR_OP_SPS, $08, $B0
+!byte CHOR_OP_INS, id_mov_incr, $10
+!byte CHOR_OP_INS, id_mov_incr, $20
+!byte CHOR_OP_INS, id_mov_incr, $30
+!byte CHOR_OP_INS, id_mov_incr, $40
+!byte CHOR_OP_INS, id_mov_incr, $50
+!byte CHOR_OP_SPS, $D9, $30
+!byte CHOR_OP_INS, id_mov_decr, $10
+!byte CHOR_OP_INS, id_mov_decr, $20
+!byte CHOR_OP_INS, id_mov_decr, $30
+!byte CHOR_OP_INS, id_mov_decr, $40
+!byte CHOR_OP_INS, id_mov_decr, $50
+!byte CHOR_OP_SPS, $D9, $50
+!byte CHOR_OP_INS, id_mov_decr, $10
+!byte CHOR_OP_INS, id_mov_decr, $20
+!byte CHOR_OP_INS, id_mov_decr, $30
+!byte CHOR_OP_INS, id_mov_decr, $40
+!byte CHOR_OP_INS, id_mov_decr, $50
+!byte CHOR_OP_SPS, $D9, $70
+!byte CHOR_OP_INS, id_mov_decr, $10
+!byte CHOR_OP_INS, id_mov_decr, $20
+!byte CHOR_OP_INS, id_mov_decr, $30
+!byte CHOR_OP_INS, id_mov_decr, $40
+!byte CHOR_OP_INS, id_mov_decr, $50
+!byte CHOR_OP_SPS, $D9, $90
+!byte CHOR_OP_INS, id_mov_decr, $10
+!byte CHOR_OP_INS, id_mov_decr, $20
+!byte CHOR_OP_INS, id_mov_decr, $30
+!byte CHOR_OP_INS, id_mov_decr, $40
+!byte CHOR_OP_INS, id_mov_decr, $50
+!byte CHOR_OP_SPS, $D9, $B0
+!byte CHOR_OP_INS, id_mov_decr, $10
+!byte CHOR_OP_INS, id_mov_decr, $20
+!byte CHOR_OP_INS, id_mov_decr, $30
+!byte CHOR_OP_INS, id_mov_decr, $40
+!byte CHOR_OP_INS, id_mov_decr, $50
 
 .choregraphy_end:
 !byte CHOR_OP_SLP, $FF

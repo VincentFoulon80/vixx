@@ -35,7 +35,11 @@ run_choregraphy:
     lda choregraphy_sleep
     beq .chor_parse
     lda wait_frame
+    and #WFRAME_CHOR
     bne +
+    lda wait_frame
+    ora #WFRAME_CHOR
+    sta wait_frame
     dec choregraphy_sleep
 +   jmp .chor_end
 .chor_parse   
