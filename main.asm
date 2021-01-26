@@ -290,24 +290,75 @@ irq_done:
 
 !src "resources/strings.asm"
 !src "resources/sprites.asm"
-;!src "resources/tiles.asm"
-;!src "resources/map.asm"
 
 !src "movements.asm"
 
 *=choregraphy_start
-!byte CHOR_OP_SPS, $6F,$20
-!byte CHOR_OP_INS, id_mov_incr, $02
-!byte CHOR_OP_SPS, $00,$20
-!byte CHOR_OP_SLP, $3C
-.choregraphy_lp:
+!byte CHOR_OP_SPS, $20,$20
+!byte CHOR_OP_LDA, $08
+!byte CHOR_OP_SLP, $FC
+
+.choregraphy_slide:
 !byte CHOR_OP_INS, id_mov_incr, $02
 !byte CHOR_OP_INS, id_mov_incr, $12
 !byte CHOR_OP_INS, id_mov_dcic, $12
 !byte CHOR_OP_MPS, $10, $00
+!byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $10
-!byte CHOR_OP_JMP, <.choregraphy_lp, >.choregraphy_lp
+!byte CHOR_OP_JAN, <.choregraphy_slide, >.choregraphy_slide
+!byte CHOR_OP_SLP, $30
+!byte CHOR_OP_SPS, $6F, $20
+!byte CHOR_OP_INS, id_mov_dcic, $40
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_dcic, $31
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_dcic, $22
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_dcic, $13
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_dcic, $04
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_incr, $13
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_incr, $22
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_incr, $31
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_incr, $40
+!byte CHOR_OP_LDA, $05
+!byte CHOR_OP_SLP, $30
 
+.choregraphy_explosion:
+!byte CHOR_OP_INS, id_mov_dcic, $40
+!byte CHOR_OP_INS, id_mov_dcic, $31
+!byte CHOR_OP_INS, id_mov_dcic, $22
+!byte CHOR_OP_INS, id_mov_dcic, $13
+!byte CHOR_OP_INS, id_mov_dcic, $04
+!byte CHOR_OP_INS, id_mov_incr, $13
+!byte CHOR_OP_INS, id_mov_incr, $22
+!byte CHOR_OP_INS, id_mov_incr, $31
+!byte CHOR_OP_INS, id_mov_incr, $40
+!byte CHOR_OP_DEA
+!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_JAN, <.choregraphy_explosion, >.choregraphy_explosion
+
+!byte CHOR_OP_LDA, $08
+.choregraphy_slide_explosion:
+!byte CHOR_OP_SPS, $4F,$20
+!byte CHOR_OP_INS, id_mov_incr, $04
+!byte CHOR_OP_INS, id_mov_incr, $24
+!byte CHOR_OP_INS, id_mov_dcic, $24
+!byte CHOR_OP_SPS, $8F,$20
+!byte CHOR_OP_INS, id_mov_incr, $04
+!byte CHOR_OP_INS, id_mov_incr, $24
+!byte CHOR_OP_INS, id_mov_dcic, $24
+!byte CHOR_OP_DEA
+!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_JAN, <.choregraphy_slide_explosion, >.choregraphy_slide_explosion
+
+.choregraphy_end:
+!byte CHOR_OP_SLP, $FF
+!byte CHOR_OP_JMP, <.choregraphy_end, >.choregraphy_end
 
 *=obj_count
 !byte $0A

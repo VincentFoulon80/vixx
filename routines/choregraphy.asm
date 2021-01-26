@@ -15,9 +15,19 @@ CHOR_OP_CHM = $02 ; CHange Mode             : mode
 CHOR_OP_SPS = $03 ; Set PoSition (absolute) : pos_x, pos_y
 CHOR_OP_MPS = $04 ; Move PoSition (relative): delta_x, delta_y
 CHOR_OP_FPS = $05 ; Fast Move Position (rel): delta_xy
-CHOR_OP_JMP = $F0 ; JuMP to address         : new_addr
-CHOR_OP_JIZ = $F1 ; Jump If reg is Zero     : new_addr
-CHOR_OP_JIN = $F2 ; Jump If reg is Not zero : new_addr
+CHOR_OP_LDA = $30 ; LoaD regA               : immediate value
+CHOR_OP_INA = $31 ; INcrement regA          : 
+CHOR_OP_DEA = $32 ; DEcregment regA         :
+CHOR_OP_LDB = $30 ; LoaD regB               : immediate value
+CHOR_OP_INB = $31 ; INcrement regB          : 
+CHOR_OP_DEB = $32 ; DEcregment regB         :
+CHOR_OP_JMP = $F0 ; JuMP to address         : addr_l, addr_h
+CHOR_OP_JAZ = $F1 ; Jump If regA is Zero    : addr_l, addr_h
+CHOR_OP_JAN = $F2 ; Jump If regA is Not zero: addr_l, addr_h
+CHOR_OP_JBZ = $F3 ; Jump If regA is Zero    : addr_l, addr_h
+CHOR_OP_JBN = $F4 ; Jump If regA is Not zero: addr_l, addr_h
+CHOR_OP_JXZ = $F5 ; Jump if posX is Zero    : addr_l, addr_h
+CHOR_OP_JYZ = $F6 ; Jump if posY is Zero    : addr_l, addr_h
 CHOR_OP_EXC = $FF ; EXeCute code            : address_l, address_y
 
 run_choregraphy:
@@ -81,6 +91,38 @@ run_choregraphy:
     ; TODO
     jmp .chor_end
 +
+    cmp #CHOR_OP_LDA
+    bne +
+    jsr .chor_next_byte
+    sta choregraphy_reg_a
+    jmp .chor_end
++
+    cmp #CHOR_OP_INA
+    bne +
+    inc choregraphy_reg_a
+    jmp .chor_end
++
+    cmp #CHOR_OP_DEA
+    bne +
+    dec choregraphy_reg_a
+    jmp .chor_end
++
+    cmp #CHOR_OP_LDB
+    bne +
+    jsr .chor_next_byte
+    sta choregraphy_reg_b
+    jmp .chor_end
++
+    cmp #CHOR_OP_INB
+    bne +
+    inc choregraphy_reg_b
+    jmp .chor_end
++
+    cmp #CHOR_OP_DEB
+    bne +
+    dec choregraphy_reg_b
+    jmp .chor_end
++
     cmp #CHOR_OP_JMP
     bne +
     jsr .chor_next_byte
@@ -91,14 +133,76 @@ run_choregraphy:
     sta choregraphy_pc_l
     jmp .chor_end
 +
-    cmp #CHOR_OP_JIZ
+    cmp #CHOR_OP_JAZ
     bne +
-    ; TODO
+    jsr .chor_next_byte
+    tax
+    jsr .chor_next_byte
+    ldy choregraphy_reg_a
+    bne +
+    sta choregraphy_pc_h
+    txa
+    sta choregraphy_pc_l
     jmp .chor_end
 +
-    cmp #CHOR_OP_JIN
+    cmp #CHOR_OP_JAN
     bne +
-    ; TODO
+    jsr .chor_next_byte
+    tax
+    jsr .chor_next_byte
+    ldy choregraphy_reg_a
+    beq +
+    sta choregraphy_pc_h
+    txa
+    sta choregraphy_pc_l
+    jmp .chor_end
++
+    cmp #CHOR_OP_JBZ
+    bne +
+    jsr .chor_next_byte
+    tax
+    jsr .chor_next_byte
+    ldy choregraphy_reg_b
+    bne +
+    sta choregraphy_pc_h
+    txa
+    sta choregraphy_pc_l
+    jmp .chor_end
++
+    cmp #CHOR_OP_JBN
+    bne +
+    jsr .chor_next_byte
+    tax
+    jsr .chor_next_byte
+    ldy choregraphy_reg_b
+    beq +
+    sta choregraphy_pc_h
+    txa
+    sta choregraphy_pc_l
+    jmp .chor_end
++
+    cmp #CHOR_OP_JXZ
+    bne +
+    jsr .chor_next_byte
+    tax
+    jsr .chor_next_byte
+    ldy choregraphy_pos_x
+    bne +
+    sta choregraphy_pc_h
+    txa
+    sta choregraphy_pc_l
+    jmp .chor_end
++
+    cmp #CHOR_OP_JYZ
+    bne +
+    jsr .chor_next_byte
+    tax
+    jsr .chor_next_byte
+    ldy choregraphy_pos_y
+    bne +
+    sta choregraphy_pc_h
+    txa
+    sta choregraphy_pc_l
     jmp .chor_end
 +
     cmp #CHOR_OP_EXC

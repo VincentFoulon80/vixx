@@ -83,8 +83,8 @@ choregraphy_pos_h = $34
 choregraphy_pos_x = $33
 choregraphy_pos_y = $34
 choregraphy_sleep = $35
-choregraphy_opcode= $36
-choregraphy_reg   = $37
+choregraphy_reg_a = $36
+choregraphy_reg_b = $37
 
 score_87 = $77
 score_65 = $78

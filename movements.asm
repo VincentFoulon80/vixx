@@ -120,14 +120,16 @@ mov_dec:
     bcc +           ; \
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
-    dec r_obj_x     ; )- then increment x
-    bpl +           ; \_ kill on OOB
+    dec r_obj_x     ; )- then decrement x
+    ldy r_obj_x     ; \
+    cpy #$FF        ;  |- kill on OOB
+    bne +           ;  |
     stz r_obj_t     ; /
 +   sta r_obj_r0    ; \
     lda r_obj_x     ;  |
     sec             ;  |- perform substract on x
     sbc r_obj_r0    ;  |
-    bpl +           ;  | \_ kill on OOB
+    bcs +           ;  | \_ kill on OOB
     stz r_obj_t     ;  | /
 +   sta r_obj_x     ; /
     lda r_obj_p     ; \_ load parameter's right side
@@ -137,14 +139,16 @@ mov_dec:
     bcc +           ; \
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
-    dec r_obj_y     ; )- then increment y
-    bpl +           ; \_ kill on OOB
+    dec r_obj_y     ; )- then decrement y
+    ldy r_obj_x     ; \
+    cpy #$FF        ;  |- kill on OOB
+    bne +           ;  |
     stz r_obj_t     ; /
 +   sta r_obj_r0    ; \
     lda r_obj_y     ;  |
     sec             ;  |- perform substract on y
     sbc r_obj_r0    ;  |
-    bpl +           ;  | \_ kill on OOB
+    bcs +           ;  | \_ kill on OOB
     stz r_obj_t     ;  | /
 +   sta r_obj_y     ; /
     jmp mov_done    ; )- end of movement
@@ -180,14 +184,16 @@ mov_inc_dec:
     bcc +           ; \
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
-    dec r_obj_y     ; )- then increment y
-    bpl +           ; \_ kill on OOB
+    dec r_obj_y     ; )- then decrement y
+    ldy r_obj_x     ; \
+    cpy #$FF        ;  |- kill on OOB
+    bne +           ;  |
     stz r_obj_t     ; /
 +   sta r_obj_r0    ; \
     lda r_obj_y     ;  |
     sec             ;  |- perform substract on y
     sbc r_obj_r0    ;  |
-    bpl +           ;  | \_ kill on OOB
+    bcs +           ;  | \_ kill on OOB
     stz r_obj_t     ;  | /
 +   sta r_obj_y     ; /
     jmp mov_done    ; )- end of movement
@@ -208,8 +214,11 @@ mov_dec_inc:
     bcc +           ; \
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
-    dec r_obj_x     ; )- then increment x
-    bpl +           ; \_ kill on OOB
+    ; <- if x = 0 then overflow occurs!!!!
+    dec r_obj_x     ; )- then decrement x
+    ldy r_obj_x     ; \
+    cpy #$FF        ;  |- kill on OOB
+    bne +           ;  |
     stz r_obj_t     ; /
 +   sta r_obj_r0    ; \
     lda r_obj_x     ;  |
