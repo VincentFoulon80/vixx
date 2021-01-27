@@ -32,7 +32,7 @@ insert_object:              ; insert a new object in the list
     inc obj_count           ; )- increment counter and insert at the end
     lda obj_count
     cmp #$80
-    bra +
+    bne +
     ; overflow, skip insert
     dec obj_count
     rts
@@ -52,6 +52,30 @@ insert_object:              ; insert a new object in the list
     lda r_obj_y             ;  |- insert y pos
     sta (r_obj_a),Y         ; /
     rts                     ; )- end of routine
+; ###########################
+
+; ###########################
+reset_objects:
+    lda #<obj_table         ; \
+    sta r_obj_a             ;  |
+    lda #>obj_table         ;  |- object lookup loop init
+    sta r_obj_a+1           ;  |
+    ldy #$7F                ;  |
+    sty obj_count           ;  |
+    iny                     ;  |
+    phy                     ; /
+-
+    ply                     ; \
+    dey                     ;  |- for y=0 to obj_count
+    beq +                   ;  |
+    phy                     ; /
+    lda #id_mov_reset       ; \_ force Reset type
+    sta (r_obj_a)           ; /
+    clc                     ; \_ obj_addr += obj_size
+    +adc16 r_obj_a, obj_size; /
+    jmp -                   ; )- next
++   
+    rts
 ; ###########################
 
 ; ###########################
@@ -111,6 +135,18 @@ handle_touched:
 .touched_end:               ; \
     clc                     ;  |- return with carry clear (no touchy)
     rts                     ; /
+; ###########################
+
+; ###########################
+player_touched:
+    lda #INVINCIBILITY_FRAMES;\_ set invincibility frames
+    sta invincibility_cnt   ; /
+    dec lives               ; \
+    bne +                   ;  |- decrease lives, and handle gameover
+    lda #GAME_MODE_GAMEOVER ;  |
+    sta game_mode           ; /
++   jsr refresh_lives       ; )- refresh live counter 
+    rts                     ;
 ; ###########################
 
 ; ###########################
@@ -202,6 +238,23 @@ refresh_score:
     lda PET_NULL
     sta dynamic_string+8
     +fn_print str_color_score
-    +fn_locate 30, 3, dynamic_string
+    +fn_locate 30, 6, dynamic_string
     rts
+; ###########################
+
+; ###########################
+refresh_lives:
+    +fn_locate 29, 9, str_ui_empty_slot
+    +fn_plot 30,9
+    lda #PET_COLOR_LRED
+    jsr CHROUT
+    lda chr_live
+    ldx lives
+    beq +
+-
+    dex
+    beq +
+    jsr CHROUT
+    jmp -
++   rts
 ; ###########################

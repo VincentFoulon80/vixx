@@ -7,12 +7,18 @@ mov_done:
 
 id_mov_null = $00
 mov_null:
+    jmp mov_done
+
+id_mov_reset = $01
+mov_reset:
     stz r_obj_x
     lda #$FF
     sta r_obj_y
+    stz r_obj_t
+    stz r_obj_p
     jmp mov_done
 
-id_mov_plyr = $01
+id_mov_plyr = $02
 mov_player:
     lda #0
     jsr joystick_get        ; fetch joy0
@@ -63,7 +69,7 @@ mov_player:
     sta plyr_y
     jmp mov_done
 
-id_mov_incr = $02
+id_mov_incr = $03
 mov_inc:
     lda frame_count ; \
     and #$01        ;  |- load frame count parity into X
@@ -80,12 +86,16 @@ mov_inc:
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
     inc r_obj_x     ; )- then increment x
-    bne +           ; \_ kill on OOB
-    stz r_obj_t     ; /
+    bne +           ; \
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   clc             ; \
     adc r_obj_x     ;  |- perform addition on x
-    bcc +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcc +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_x     ; /
     lda r_obj_p     ; \_ load parameter's right side
     and #$0F        ; /
@@ -95,16 +105,20 @@ mov_inc:
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
     inc r_obj_y     ; )- then increment y
-    bne +           ; \_ kill on OOB
-    stz r_obj_t     ; /
+    bne +           ; \
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   clc             ; \
     adc r_obj_y     ;  |- perform addition on y
-    bcc +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcc +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_y     ; /
     jmp mov_done    ; )- end of movement
 
-id_mov_decr = $03                 
+id_mov_decr = $04
 mov_dec:
     lda frame_count ; \
     and #$01        ;  |- load frame count parity into X
@@ -122,15 +136,19 @@ mov_dec:
     bne +           ; /
     dec r_obj_x     ; )- then decrement x
     ldy r_obj_x     ; \
-    cpy #$FF        ;  |- kill on OOB
+    cpy #$FF        ;  |
     bne +           ;  |
-    stz r_obj_t     ; /
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   sta r_obj_r0    ; \
     lda r_obj_x     ;  |
     sec             ;  |- perform substract on x
     sbc r_obj_r0    ;  |
-    bcs +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcs +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_x     ; /
     lda r_obj_p     ; \_ load parameter's right side
     and #$0F        ; /
@@ -141,19 +159,23 @@ mov_dec:
     bne +           ; /
     dec r_obj_y     ; )- then decrement y
     ldy r_obj_x     ; \
-    cpy #$FF        ;  |- kill on OOB
+    cpy #$FF        ;  |
     bne +           ;  |
-    stz r_obj_t     ; /
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   sta r_obj_r0    ; \
     lda r_obj_y     ;  |
     sec             ;  |- perform substract on y
     sbc r_obj_r0    ;  |
-    bcs +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcs +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_y     ; /
     jmp mov_done    ; )- end of movement
 
-id_mov_icdc = $04
+id_mov_icdc = $05
 mov_inc_dec:
     lda frame_count ; \
     and #$01        ;  |- load frame count parity into X
@@ -170,12 +192,16 @@ mov_inc_dec:
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
     inc r_obj_x     ; )- then increment x
-    bne +           ; \_ kill on OOB
-    stz r_obj_t     ; /
+    bne +           ; \
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   clc             ; \
     adc r_obj_x     ;  |- perform addition on x
-    bcc +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcc +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_x     ; /
     lda r_obj_p     ; \_ load parameter's right side
     and #$0F        ; /
@@ -186,19 +212,23 @@ mov_inc_dec:
     bne +           ; /
     dec r_obj_y     ; )- then decrement y
     ldy r_obj_x     ; \
-    cpy #$FF        ;  |- kill on OOB
+    cpy #$FF        ;  |
     bne +           ;  |
-    stz r_obj_t     ; /
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   sta r_obj_r0    ; \
     lda r_obj_y     ;  |
     sec             ;  |- perform substract on y
     sbc r_obj_r0    ;  |
-    bcs +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcs +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_y     ; /
     jmp mov_done    ; )- end of movement
 
-id_mov_dcic = $05
+id_mov_dcic = $06
 mov_dec_inc:
     lda frame_count ; \
     and #$01        ;  |- load frame count parity into X
@@ -214,18 +244,21 @@ mov_dec_inc:
     bcc +           ; \
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
-    ; <- if x = 0 then overflow occurs!!!!
     dec r_obj_x     ; )- then decrement x
     ldy r_obj_x     ; \
-    cpy #$FF        ;  |- kill on OOB
+    cpy #$FF        ;  |
     bne +           ;  |
-    stz r_obj_t     ; /
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   sta r_obj_r0    ; \
     lda r_obj_x     ;  |
     sec             ;  |- perform substract on x
     sbc r_obj_r0    ;  |
-    bcs +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcs +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_x     ; /
     lda r_obj_p     ; \_ load parameter's right side
     and #$0F        ; /
@@ -235,11 +268,20 @@ mov_dec_inc:
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
     inc r_obj_y     ; )- then increment y
-    bne +           ; \_ kill on OOB
-    stz r_obj_t     ; /
+    bne +           ; \
+    lda #id_mov_reset; |- kill on OOB
+    sta r_obj_t     ;  |
+    jmp mov_done    ; /
 +   clc             ; \
     adc r_obj_y     ;  |- perform addition on y
-    bcc +           ;  | \_ kill on OOB
-    stz r_obj_t     ;  | /
+    bcc +           ;  | \
+    lda #id_mov_reset; |  |- kill on OOB
+    sta r_obj_t     ;  |  |
+    jmp mov_done    ;  | /
 +   sta r_obj_y     ; /
     jmp mov_done    ; )- end of movement
+
+
+mov_dbg:
+    !byte $DB
+    jmp mov_done

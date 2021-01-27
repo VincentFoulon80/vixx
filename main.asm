@@ -52,14 +52,14 @@ prg_boot:
 
     +fn_locate 0, 0, str_ui_full_row
     +fn_locate 0, 1, str_ui_game_row
-    +fn_locate 0, 2, str_ui_score_lbl_row
-    +fn_locate 0, 3, str_ui_score_val_row
+    +fn_locate 0, 2, str_ui_hiscore_lbl_row
+    +fn_locate 0, 3, str_ui_empty_slot_row
     +fn_locate 0, 4, str_ui_game_row
-    +fn_locate 0, 5, str_ui_game_row
-    +fn_locate 0, 6, str_ui_game_row
+    +fn_locate 0, 5, str_ui_score_lbl_row
+    +fn_locate 0, 6, str_ui_empty_slot_row
     +fn_locate 0, 7, str_ui_game_row
-    +fn_locate 0, 8, str_ui_game_row
-    +fn_locate 0, 9, str_ui_game_row
+    +fn_locate 0, 8, str_ui_lives_lbl_row
+    +fn_locate 0, 9, str_ui_empty_slot_row
     +fn_locate 0,10, str_ui_game_row
     +fn_locate 0,11, str_ui_game_row
     +fn_locate 0,12, str_ui_game_row
@@ -87,18 +87,31 @@ prg_boot:
     jsr CHRIN
 
     +fn_locate 0,10, str_ui_game_row
+    jsr reset_objects
+    jsr refresh_score
+    jsr refresh_lives
 
-    +fn_irq_init kernal_irq, game_loop
+    +fn_irq_init kernal_irq, vsync_loop
 
-main_lp:
+
+; =======================================================================================================
+; ###  ######  ######  ##     ##  ######      ##      ######  ######  ######  ###########################
+; ###  ##      ##  ##  #### ####  ##          ##      ##  ##  ##  ##  ##  ##  ###########################
+; ###  ## ###  ######  ## ### ##  #####       ##      ##  ##  ##  ##  ######  ###########################
+; ###  ##  ##  ##  ##  ##  #  ##  ##          ##      ##  ##  ##  ##  ##      ###########################
+; ###  ######  ##  ##  ##     ##  ######      ######  ######  ######  ##      ###########################
+; =======================================================================================================
+
+
+game_loop:
     lda game_mode
     cmp #$FF
     bne +
+    !byte $DB
     +fn_irq_restore kernal_irq
     rts
 +
 
-    ;jsr optimize_object_count
     lda wait_frame
     and #WFRAME_MOVE
     beq +
@@ -107,6 +120,7 @@ main_lp:
     ora #WFRAME_MOVE
     sta wait_frame
 update_game:
+    jsr optimize_object_count
     lda #<obj_table         ; \
     sta r_obj_a             ;  |
     lda #>obj_table         ;  |- object lookup loop init
@@ -138,9 +152,6 @@ update_game:
     tax                     ; ) use x for indexed indirect addressing
     jmp (obj_fn_table,X)    ; ) jmp to object's movement routine based on the id
 mov_done:
-;   ldy #obj_idx_type       ; \
-    lda r_obj_t             ;  |- save type
-    sta (r_obj_a);,Y        ; /
     ldy #obj_idx_param      ; \
     lda r_obj_p             ;  |- save param
     sta (r_obj_a),Y         ; /
@@ -150,11 +161,19 @@ mov_done:
     ldy #obj_idx_pos_y      ; \
     lda r_obj_y             ;  |- save y
     sta (r_obj_a),Y         ; /
-    clc                     ;  |
-    +adc16 r_obj_a, obj_size;  |- obj_addr += obj_size
-    jmp -
+;   ldy #obj_idx_type       ; \
+    lda r_obj_t             ;  |- save type
+    sta (r_obj_a);,Y        ; /
+    clc                     ; \_ obj_addr += obj_size
+    +adc16 r_obj_a, obj_size; /
+    jmp -                   ; )- next object
 +
 
+    lda invincibility_cnt       ; \
+    beq +                       ;  |- skip collisions when invincible
+    dec invincibility_cnt       ;  |- count down the invincibility
+    jmp update_collisions_end   ; /
++
 update_collisions:
     lda #<obj_table         ; \
     sta r_obj_a             ;  |
@@ -170,16 +189,18 @@ update_collisions:
     dey                     ;  |- for y=0 to obj_count
     beq update_collisions_end; |
     phy                     ; /
-    jsr handle_touched
-    ;bcs update_collisions_end
-    jsr handle_graze
+    jsr handle_touched      ; )- check touched
+    bcc +                   ; \
+    jsr player_touched      ;  |- Player has been touched! skip graze
+    jmp update_collisions_end;/
++   jsr handle_graze        ; )- check grazing
     jmp -
 
 update_collisions_end:
 
 !src "routines/choregraphy.asm"
 
-    jmp main_lp
+    jmp game_loop
 
 ; =======================================================================================================
 ; ###  ######  ##  ##  #####   #####   ######  ##  ##  ######  ##  ##    ##  ######  ######  ############
@@ -214,14 +235,14 @@ rng:
 !src "routines/game.asm"
 
 ; =======================================================================================================
-; ###  ######  ######  ##     ##  ######      ##      ######  ######  ######  ###########################
-; ###  ##      ##  ##  #### ####  ##          ##      ##  ##  ##  ##  ##  ##  ###########################
-; ###  ## ###  ######  ## ### ##  #####       ##      ##  ##  ##  ##  ######  ###########################
-; ###  ##  ##  ##  ##  ##  #  ##  ##          ##      ##  ##  ##  ##  ##      ###########################
-; ###  ######  ##  ##  ##     ##  ######      ######  ######  ######  ##      ###########################
+; ###  ##  ##  ######  ##  ##  ##    ##  ######      ##      ######  ######  ######  ####################
+; ###  ##  ##  ##      ##  ##  ####  ##  ##          ##      ##  ##  ##  ##  ##  ##  ####################
+; ###  ##  ##  ######   ####   ## ## ##  ##          ##      ##  ##  ##  ##  ######  ####################
+; ###   ####       ##    ##    ##  ####  ##          ##      ##  ##  ##  ##  ##      ####################
+; ###    ##    ######    ##    ##    ##  ######      ######  ######  ######  ##      ####################
 ; =======================================================================================================
 
-game_loop:
+vsync_loop:
     lda vera_isr
     and #vera_isr_mask_vsync
     bne +
@@ -284,7 +305,22 @@ irq_done:
 !src "movements.asm"
 
 *=choregraphy_start
-!byte CHOR_OP_SPS, $20,$20
+; insert player
+!byte CHOR_OP_SPS, $6F, $C7
+!byte CHOR_OP_INS, id_mov_plyr, $00
+; first section
+!byte CHOR_OP_SPS, $6F, $20
+!byte CHOR_OP_INS, id_mov_dcic, $20
+!byte CHOR_OP_INS, id_mov_dcic, $21
+!byte CHOR_OP_INS, id_mov_dcic, $11
+!byte CHOR_OP_INS, id_mov_dcic, $12
+!byte CHOR_OP_INS, id_mov_incr, $02
+!byte CHOR_OP_INS, id_mov_incr, $12
+!byte CHOR_OP_INS, id_mov_incr, $11
+!byte CHOR_OP_INS, id_mov_incr, $21
+!byte CHOR_OP_INS, id_mov_incr, $20
+; prepare slide loop
+!byte CHOR_OP_SPS, $20, $20
 !byte CHOR_OP_LDA, $08
 !byte CHOR_OP_SLP, $FC
 
@@ -296,6 +332,7 @@ irq_done:
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_JAN, <.choregraphy_slide, >.choregraphy_slide
+; next section
 !byte CHOR_OP_SLP, $30
 !byte CHOR_OP_SPS, $6F, $20
 !byte CHOR_OP_INS, id_mov_dcic, $40
@@ -428,4 +465,5 @@ irq_done:
 !byte id_mov_incr,$20,$6F,$20
 
 *=obj_fn_table
-!word mov_null, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc
+!word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc;, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg
+; note : mov_null doit rien faire, et ajouter un mov_reset pour forcer la position

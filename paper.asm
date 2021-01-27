@@ -54,6 +54,11 @@ WFRAME_MOVE = %00000001
 WFRAME_CHOR = %00000010
 
 GRAZE_BONUS = $01
+INVINCIBILITY_FRAMES = $3C
+
+GAME_MODE_TITLE = $00
+GAME_MODE_GAME = $01
+GAME_MODE_GAMEOVER = $FF
 
 ; TEMPORARY VARIABLES
 ; $02 to $21
@@ -89,6 +94,8 @@ choregraphy_sleep = $35
 choregraphy_reg_a = $36
 choregraphy_reg_b = $37
 
+invincibility_cnt = $75
+lives = $76
 score_87 = $77
 score_65 = $78
 score_43 = $79
@@ -127,4 +134,6 @@ game_mode = $7F
     sta choregraphy_pc_l
     lda #>choregraphy_start
     sta choregraphy_pc_h
+    lda #$05
+    sta lives
 }
