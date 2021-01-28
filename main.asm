@@ -155,6 +155,7 @@ title_screen:
     jsr sleep_one_frame
     +fn_locate 9,10,str_press_enter
 
+    +fn_plot 48, 0
     jsr CHRIN                       ; wait for the enter key
 
     +fn_locate 0,10, str_ui_game_row
