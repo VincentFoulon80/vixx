@@ -55,6 +55,7 @@ init_game:                  ;
     stz score_43            ;
     stz score_21            ;
     jsr reset_objects       ;
+    jsr refresh_hiscore     ;
     jsr refresh_score       ;
     jsr refresh_lives       ;
     rts                     ;
@@ -310,6 +311,51 @@ refresh_score:
     sta dynamic_string+8
     +fn_print str_color_score
     +fn_locate 30, 6, dynamic_string
+    rts
+; ###########################
+
+; ###########################
+refresh_hiscore:
+    lda hiscore_87
+    +get_left
+    ora #$30
+    sta dynamic_string
+    lda hiscore_87
+    +get_right
+    ora #$30
+    sta dynamic_string+1
+
+    lda hiscore_65
+    +get_left
+    ora #$30
+    sta dynamic_string+2
+    lda hiscore_65
+    +get_right
+    ora #$30
+    sta dynamic_string+3
+
+    lda hiscore_43
+    +get_left
+    ora #$30
+    sta dynamic_string+4
+    lda hiscore_43
+    +get_right
+    ora #$30
+    sta dynamic_string+5
+
+    lda hiscore_21
+    +get_left
+    ora #$30
+    sta dynamic_string+6
+    lda hiscore_21
+    +get_right
+    ora #$30
+    sta dynamic_string+7
+
+    lda PET_NULL
+    sta dynamic_string+8
+    +fn_print str_color_score
+    +fn_locate 30, 3, dynamic_string
     rts
 ; ###########################
 
