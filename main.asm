@@ -27,72 +27,32 @@ prg_boot:
     
     +fn_vera_set_address %00010001, $FC00 ; increment 1, bank 1, address FC00 + index*8
     ldx $00
--
-    lda #<$0400     
-    sta vera_data_0 ; addr_mode
-    lda #>$0400     
-    sta vera_data_0 ; addr_mode
-    stz vera_data_0 ; pos x (low)
-    stz vera_data_0 ; pos x (high)
-    stz vera_data_0 ; pos y (low)
-    stz vera_data_0 ; pos y (high)
-
-    lda #vera_sprite_zdepth_behind_layer1
-    sta vera_data_0
-    lda #vera_sprite_width_8px | vera_sprite_height_8px
-    sta vera_data_0
-
-    dex
-    bne -
+-                                                       ; \
+    lda #<$0400                                         ;  |  
+    sta vera_data_0 ; addr_mode                         ;  |- init all sprites
+    lda #>$0400                                         ;  |
+    sta vera_data_0 ; addr_mode                         ;  |
+    stz vera_data_0 ; pos x (low)                       ;  |
+    stz vera_data_0 ; pos x (high)                      ;  |
+    stz vera_data_0 ; pos y (low)                       ;  |
+    stz vera_data_0 ; pos y (high)                      ;  |
+                                                        ;  |
+    lda #vera_sprite_zdepth_behind_layer1               ;  |
+    sta vera_data_0                                     ;  |
+    lda #vera_sprite_width_8px | vera_sprite_height_8px ;  |
+    sta vera_data_0                                     ;  |
+                                                        ;  |
+    dex                                                 ;  |
+    bne -                                               ; /
 
     +fn_vera_set_video vera_video_mask_sprite | vera_video_mask_layer1 | vera_video_mask_output_vga
-
     jsr clear_layer0
     jsr clear_layer1
 
-    +fn_locate 0, 0, str_ui_full_row
-    +fn_locate 0, 1, str_ui_game_row
-    +fn_locate 0, 2, str_ui_hiscore_lbl_row
-    +fn_locate 0, 3, str_ui_empty_slot_row
-    +fn_locate 0, 4, str_ui_game_row
-    +fn_locate 0, 5, str_ui_score_lbl_row
-    +fn_locate 0, 6, str_ui_empty_slot_row
-    +fn_locate 0, 7, str_ui_game_row
-    +fn_locate 0, 8, str_ui_lives_lbl_row
-    +fn_locate 0, 9, str_ui_empty_slot_row
-    +fn_locate 0,10, str_ui_game_row
-    +fn_locate 0,11, str_ui_game_row
-    +fn_locate 0,12, str_ui_game_row
-    +fn_locate 0,13, str_ui_game_row
-    +fn_locate 0,14, str_ui_game_row
-    +fn_locate 0,15, str_ui_game_row
-    +fn_locate 0,16, str_ui_game_row
-    +fn_locate 0,17, str_ui_game_row
-    +fn_locate 0,18, str_ui_game_row
-    +fn_locate 0,19, str_ui_game_row
-    +fn_locate 0,20, str_ui_game_row
-    +fn_locate 0,21, str_ui_game_row
-    +fn_locate 0,22, str_ui_game_row
-    +fn_locate 0,23, str_ui_game_row
-    +fn_locate 0,24, str_ui_game_row
-    +fn_locate 0,25, str_ui_game_row
-    +fn_locate 0,26, str_ui_game_row
-    +fn_locate 0,27, str_ui_game_row
-    +fn_locate 0,28, str_ui_game_row
-    +fn_locate 0,29, str_ui_full_row
-    
-    
-    +fn_locate 9,10,str_press_enter
-
-    jsr CHRIN
-
-    +fn_locate 0,10, str_ui_game_row
-    jsr reset_objects
-    jsr refresh_score
-    jsr refresh_lives
-
     +fn_irq_init kernal_irq, vsync_loop
 
+    lda #gamemode_title
+    sta game_mode
 
 ; =======================================================================================================
 ; ###  ######  ######  ##     ##  ######      ##      ######  ######  ######  ###########################
@@ -102,16 +62,73 @@ prg_boot:
 ; ###  ######  ##  ##  ##     ##  ######      ######  ######  ######  ##      ###########################
 ; =======================================================================================================
 
-
-game_loop:
+change_gamemode:
     lda game_mode
-    cmp #$FF
-    bne +
-    !byte $DB
-    +fn_irq_restore kernal_irq
-    rts
-+
 
+    cmp #gamemode_quit
+    bne +
+        jmp quit_game
+
++   cmp #gamemode_title
+    bne +
+        jmp title_screen
+
++   cmp #gamemode_game_init
+    bne +
+        jsr init_game_screen
+        jsr init_game
+        lda #gamemode_game
+        sta game_mode
+        jmp change_gamemode
+
++   cmp #gamemode_game
+    bne +
+        jmp game_loop
+
++   cmp #gamemode_gameover
+    bne +
+        jmp game_over
+
++   jmp quit_game
+
+
+gamemode_quit = $FF
+quit_game:
+    +fn_irq_restore kernal_irq
+    !byte $DB
+    rts
+
+
+gamemode_title = $00
+title_screen:
+    ; <- TODO load or init highscore
+    jsr init_game_screen
+    jsr reset_objects
+    lda #$FF                        ; \
+    sta wait_frame                  ;  |- wait vsync
+-   lda wait_frame                  ;  |
+    bne -                           ; /
+    +fn_locate 9,10,str_press_enter
+
+    jsr CHRIN                       ; wait for the enter key
+
+    +fn_locate 0,10, str_ui_game_row
+    lda #gamemode_game_init
+    sta game_mode
+    jmp change_gamemode
+
+
+gamemode_gameover = $FE
+game_over:
+    ; <- TODO save highscore
+    lda #gamemode_title
+    sta game_mode
+    jmp change_gamemode
+
+
+gamemode_game_init = $01
+gamemode_game = $02
+game_loop:
     lda wait_frame
     and #WFRAME_MOVE
     beq +
@@ -192,9 +209,16 @@ update_collisions:
     jsr handle_touched      ; )- check touched
     bcc +                   ; \
     jsr player_touched      ;  |- Player has been touched! skip graze
+    ply                     ;  |)- clean the stack
+    bcs .game_gameover      ;  |
     jmp update_collisions_end;/
 +   jsr handle_graze        ; )- check grazing
     jmp -
+
+.game_gameover:
+    lda #gamemode_gameover  
+    sta game_mode           
+    jmp change_gamemode     
 
 update_collisions_end:
 
@@ -309,6 +333,32 @@ irq_done:
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
 ; first section
+.lol
+!byte CHOR_OP_SPS, $08, $10
+!byte CHOR_OP_INS, id_mov_incr, $22
+!byte CHOR_OP_INS, id_mov_incr, $31
+!byte CHOR_OP_INS, id_mov_incr, $13
+!byte CHOR_OP_SPS, $D9, $10
+!byte CHOR_OP_INS, id_mov_dcic, $22
+!byte CHOR_OP_INS, id_mov_dcic, $31
+!byte CHOR_OP_INS, id_mov_dcic, $13
+!byte CHOR_OP_SPS, $08, $60
+!byte CHOR_OP_INS, id_mov_incr, $22
+!byte CHOR_OP_INS, id_mov_icdc, $22
+!byte CHOR_OP_SPS, $D9, $60
+!byte CHOR_OP_INS, id_mov_dcic, $22
+!byte CHOR_OP_INS, id_mov_decr, $22
+!byte CHOR_OP_SPS, $08, $D0
+!byte CHOR_OP_INS, id_mov_icdc, $22
+!byte CHOR_OP_INS, id_mov_icdc, $31
+!byte CHOR_OP_INS, id_mov_icdc, $13
+!byte CHOR_OP_SPS, $D9, $D0
+!byte CHOR_OP_INS, id_mov_decr, $22
+!byte CHOR_OP_INS, id_mov_decr, $31
+!byte CHOR_OP_INS, id_mov_decr, $13
+!byte CHOR_OP_SLP, $1A
+!byte CHOR_OP_JMP, <.lol, >.lol
+;;
 !byte CHOR_OP_SPS, $6F, $20
 !byte CHOR_OP_INS, id_mov_dcic, $20
 !byte CHOR_OP_INS, id_mov_dcic, $21
@@ -452,17 +502,7 @@ irq_done:
 !byte $0A
 
 *=obj_table
-;        type    ,par, x , y 
-!byte id_mov_plyr,$00,$6F,$C7
-!byte id_mov_dcic,$20,$6F,$20
-!byte id_mov_dcic,$21,$6F,$20
-!byte id_mov_dcic,$11,$6F,$20
-!byte id_mov_dcic,$12,$6F,$20
-!byte id_mov_incr,$02,$6F,$20
-!byte id_mov_incr,$12,$6F,$20
-!byte id_mov_incr,$11,$6F,$20
-!byte id_mov_incr,$21,$6F,$20
-!byte id_mov_incr,$20,$6F,$20
+
 
 *=obj_fn_table
 !word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc;, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg

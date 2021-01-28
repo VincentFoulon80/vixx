@@ -33,7 +33,6 @@ vram_sprites_base       = $8000
 
 
 ; ADDRESSES AND STUFF
-; $0400 to $07FF
 kernal_irq = $9EFE
 
 choregraphy_start = $9000
@@ -47,8 +46,6 @@ obj_idx_param = $01
 obj_idx_pos_x = $02
 obj_idx_pos_y = $03
 
-dynamic_string = $0400
-
 ; CONSTANTS
 WFRAME_MOVE = %00000001
 WFRAME_CHOR = %00000010
@@ -59,6 +56,14 @@ INVINCIBILITY_FRAMES = $3C
 GAME_MODE_TITLE = $00
 GAME_MODE_GAME = $01
 GAME_MODE_GAMEOVER = $FF
+
+; LOW USAGE VARIABLES
+; $0400 to $07FF
+hiscore_87 = $0400
+hiscore_65 = $0401
+hiscore_43 = $0402
+hiscore_21 = $0403
+dynamic_string = $0500
 
 ; TEMPORARY VARIABLES
 ; $02 to $21
@@ -130,10 +135,4 @@ game_mode = $7F
     sta rng_seed_0
     lda #$84
     sta rng_seed_1
-    lda #<choregraphy_start
-    sta choregraphy_pc_l
-    lda #>choregraphy_start
-    sta choregraphy_pc_h
-    lda #$05
-    sta lives
 }

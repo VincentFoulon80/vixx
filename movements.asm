@@ -158,7 +158,7 @@ mov_dec:
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
     dec r_obj_y     ; )- then decrement y
-    ldy r_obj_x     ; \
+    ldy r_obj_y     ; \
     cpy #$FF        ;  |
     bne +           ;  |
     lda #id_mov_reset; |- kill on OOB
@@ -211,7 +211,7 @@ mov_inc_dec:
     cpx #$01        ;  |- if lowest bit set AND frame count odd:
     bne +           ; /
     dec r_obj_y     ; )- then decrement y
-    ldy r_obj_x     ; \
+    ldy r_obj_y     ; \
     cpy #$FF        ;  |
     bne +           ;  |
     lda #id_mov_reset; |- kill on OOB

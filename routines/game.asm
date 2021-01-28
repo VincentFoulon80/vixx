@@ -8,6 +8,59 @@
 }
 
 ; ###########################
+init_game_screen:
+    +fn_locate 0, 0, str_ui_full_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_hiscore_lbl_row
+    +fn_print str_ui_empty_slot_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_score_lbl_row
+    +fn_print str_ui_empty_slot_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_lives_lbl_row
+    +fn_print str_ui_empty_slot_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_game_row
+    +fn_print str_ui_full_row
+    rts
+; ###########################
+
+; ###########################
+init_game:                  ;
+    lda #<choregraphy_start ;
+    sta choregraphy_pc_l    ;
+    lda #>choregraphy_start ;
+    sta choregraphy_pc_h    ;
+    lda #$05                ;
+    sta lives               ;
+    stz score_87            ;
+    stz score_65            ;
+    stz score_43            ;
+    stz score_21            ;
+    jsr reset_objects       ;
+    jsr refresh_score       ;
+    jsr refresh_lives       ;
+    rts                     ;
+; ###########################
+
+; ###########################
 insert_object:              ; insert a new object in the list
     lda #<obj_table         ; \
     sta r_obj_a             ;  |
@@ -69,8 +122,14 @@ reset_objects:
     dey                     ;  |- for y=0 to obj_count
     beq +                   ;  |
     phy                     ; /
-    lda #id_mov_reset       ; \_ force Reset type
-    sta (r_obj_a)           ; /
+    lda #$00
+    sta (r_obj_a)           ; \
+    ldy #obj_idx_param      ;  |
+    sta (r_obj_a),Y         ;  |- hard reset everything
+    iny                     ;  |
+    sta (r_obj_a),Y         ;  |
+    iny                     ;  |
+    sta (r_obj_a),Y         ; /
     clc                     ; \_ obj_addr += obj_size
     +adc16 r_obj_a, obj_size; /
     jmp -                   ; )- next
@@ -138,14 +197,17 @@ handle_touched:
 ; ###########################
 
 ; ###########################
-player_touched:
+; returns carry set         ;
+;   if game over            ;
+player_touched:             ;
     lda #INVINCIBILITY_FRAMES;\_ set invincibility frames
     sta invincibility_cnt   ; /
     dec lives               ; \
     bne +                   ;  |- decrease lives, and handle gameover
-    lda #GAME_MODE_GAMEOVER ;  |
-    sta game_mode           ; /
+    sec
+    rts
 +   jsr refresh_lives       ; )- refresh live counter 
+    clc
     rts                     ;
 ; ###########################
 
@@ -177,24 +239,33 @@ handle_graze:
     cmp #$F7                ;  |
     bcc .grazed_end         ; /
 .grazed_xy:                 ;
+    lda #GRAZE_BONUS        ; \
+    ldx #$00                ;  |- graze scoring
+    ldy #$00                ;  |
+    jsr add_to_score        ; /
+.grazed_end:                ;
+    rts                     ; )- return
+; ###########################
+
+; ###########################
+; Adds $YYXXAA to the score
+add_to_score:
     sed                     ; \_ set decimal and reset carry
     clc                     ; /
-    lda score_21            ; \
-    adc #GRAZE_BONUS        ;  |- increase first 2 digit
+    adc score_21            ; \_ increase first 2 digit
     sta score_21            ; /
-    lda score_43            ; \
-    adc #$00                ;  |- follow the 2 next digit
+    txa                     ; \
+    adc score_43            ;  |- follow the 2 next digit
     sta score_43            ; /
-    lda score_65            ; \
-    adc #$00                ;  |- follow the 2 next digit
+    tya                     ; \
+    adc score_65            ;  |- follow the 2 next digit
     sta score_65            ; /
     lda score_87            ; \
     adc #$00                ;  |- finally follow the last 2 digit
     sta score_87            ; /
     cld                     ; )- reset back to binary
     jsr refresh_score       ; )- refresh scores on screen
-.grazed_end:                ;
-    rts                     ; )- return
+    rts
 ; ###########################
 
 ; ###########################
