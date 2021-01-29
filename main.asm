@@ -23,16 +23,32 @@ prg_boot:
     +game_init
 
     ;setup player sprite
-    +fn_vera_upload bullet, $10+vram_sprites_base_b, vram_sprites_base, bullet_packet_size, bullet_packet_qty    ; $11 = increment 1, bank 0, $0000 = address, $FF = size+1, $01 = 1 times
-    
-    +fn_vera_set_address %00010001, $FC00 ; increment 1, bank 1, address FC00 + index*8
-    ldx $00
+    +fn_vera_upload bullet, $10+bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty    ; $11 = increment 1, bank 0, $0000 = address, $FF = size+1, $01 = 1 times
+    +fn_vera_upload player, $10+player_bank, player_address, player_packet_size, player_packet_qty
+
+    +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite ; increment 1, bank 1, address FC00 + index*8
+
+    lda #player_spid                                    ; \
+    sta vera_data_0                                     ;  |
+    lda #player_spid_def                                ;  |
+    sta vera_data_0                                     ;  |
+    stz vera_data_0 ; pos x (low)                       ;  |- init player sprite
+    stz vera_data_0 ; pos x (high)                      ;  |
+    stz vera_data_0 ; pos y (low)                       ;  |
+    stz vera_data_0 ; pos y (high)                      ;  |
+                                                        ;  |
+    lda #vera_sprite_zdepth_behind_layer1               ;  |
+    sta vera_data_0                                     ;  |
+    lda #vera_sprite_width_8px | vera_sprite_height_8px ;  |
+    sta vera_data_0                                     ; /
+
+    ldx #$7E
 -                                                       ; \
-    lda #<$0400                                         ;  |  
-    sta vera_data_0 ; addr_mode                         ;  |- init all sprites
-    lda #>$0400                                         ;  |
+    lda #bullet_spid                                    ;  |  
+    sta vera_data_0                                     ;  |- init all sprites
+    lda #bullet_spid_def                                ;  |
     sta vera_data_0 ; addr_mode                         ;  |
-    stz vera_data_0 ; pos x (low)                       ;  |
+    stz vera_data_0 ; pos x (low)                       ;  |- init bullet sprites
     stz vera_data_0 ; pos x (high)                      ;  |
     stz vera_data_0 ; pos y (low)                       ;  |
     stz vera_data_0 ; pos y (high)                      ;  |
@@ -311,6 +327,9 @@ mov_done:
     lda invincibility_cnt       ; \
     beq +                       ;  |- skip collisions when invincible
     dec invincibility_cnt       ;  |- count down the invincibility
+    bne update_collisions_end   ;
+    lda #player_spid            ;
+    jsr change_player_sprite    ;
     jmp update_collisions_end   ; /
 +
 update_collisions:
@@ -319,6 +338,7 @@ update_collisions:
     lda #>obj_table         ;  |- object lookup loop init
     sta r_obj_a+1           ;  |
     ldy obj_count           ;  |
+    beq update_collisions_end; |
     ;iny                    ;  |)- the first obj is the player
     phy                     ; /
 -                           ; \
@@ -463,8 +483,21 @@ irq_done:
 ; insert player
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
+;!byte CHOR_OP_PRT, $04, $04, <str_press_enter, >str_press_enter
+!pet CHOR_OP_CHR, 4, 4, "l"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 5, 4, "e"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 6, 4, "v"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 7, 4, "e"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 8, 4, "l"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 10, 4, "1"
+!byte CHOR_OP_LDB, $04
 ; first section
-.lol
+.lvl1_s1:
 !byte CHOR_OP_SPS, $08, $10
 !byte CHOR_OP_INS, id_mov_incr, $22
 !byte CHOR_OP_INS, id_mov_incr, $31
@@ -488,8 +521,17 @@ irq_done:
 !byte CHOR_OP_INS, id_mov_decr, $31
 !byte CHOR_OP_INS, id_mov_decr, $13
 !byte CHOR_OP_SLP, $1A
-!byte CHOR_OP_JMP, <.lol, >.lol
+!byte CHOR_OP_JBN, <.rmv_lvl, >.rmv_lvl
+!byte CHOR_OP_JMP, <.lvl1_s1, >.lvl1_s1
 ;;
+!byte CHOR_OP_JMP, <.lvl1_s2, >.lvl1_s2
+.rmv_lvl:
+!pet CHOR_OP_DEB
+!byte CHOR_OP_JBN, <.lvl1_s1, >.lvl1_s1
+!pet CHOR_OP_PRD, 4, 4, "       ", PET_NULL
+!byte CHOR_OP_JMP, <.lvl1_s1, >.lvl1_s1
+;;
+.lvl1_s2:
 !byte CHOR_OP_SPS, $6F, $20
 !byte CHOR_OP_INS, id_mov_dcic, $20
 !byte CHOR_OP_INS, id_mov_dcic, $21
@@ -630,11 +672,9 @@ irq_done:
 !byte CHOR_OP_JMP, <.choregraphy_end, >.choregraphy_end
 
 *=obj_count
-!byte $0A
+!byte $00
 
 *=obj_table
 
-
 *=obj_fn_table
 !word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc;, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg
-; note : mov_null doit rien faire, et ajouter un mov_reset pour forcer la position

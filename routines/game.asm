@@ -164,6 +164,14 @@ optimize_object_count:
 
 ; ###########################
 handle_touched:
+    lda (r_obj_a)
+    beq +
+    cmp #id_mov_reset
+    beq +
+    bra .touched_start
++   clc
+    rts
+.touched_start
     ldy #obj_idx_pos_x      ; \
     lda (r_obj_a),Y         ;  |- load object's x position
     sec                     ; <
@@ -203,6 +211,8 @@ handle_touched:
 player_touched:             ;
     lda #INVINCIBILITY_FRAMES;\_ set invincibility frames
     sta invincibility_cnt   ; /
+    lda #touched_player_spid ;
+    jsr change_player_sprite;
     dec lives               ; \
     bne +                   ;  |- decrease lives, and handle gameover
     sec
@@ -213,8 +223,25 @@ player_touched:             ;
 ; ###########################
 
 ; ###########################
+change_player_sprite:
+    pha
+    +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite
+    pla
+    sta vera_data_0
+    rts
+; ###########################
+
+; ###########################
 handle_graze:
-    ldy #obj_idx_pos_x      ; \
+    lda (r_obj_a)
+    beq +
+    cmp #id_mov_reset
+    beq +
+    bra .grazed_start
++   clc
+    rts
+.grazed_start
++   ldy #obj_idx_pos_x      ; \
     lda (r_obj_a),Y         ;  |- load object's x position
     sec                     ; <
     sbc plyr_x              ;  |- compare with player's x position

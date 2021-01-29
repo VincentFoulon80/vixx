@@ -1,9 +1,9 @@
 !macro fn_plot .x, .y {
     phx
     phy
-    clc
     ldy #.x
     ldx #.y
+    clc
     jsr PLOT 
     ply
     plx
