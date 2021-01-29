@@ -169,12 +169,23 @@ title_screen:
     jsr refresh_hiscore
     jsr reset_objects
     jsr sleep_one_frame
-    +fn_locate 9,10,str_press_enter
+    +fn_locate 2, 2, str_title_0
+    +fn_locate 2, 3, str_title_1
+    +fn_locate 2, 4, str_title_2
+    +fn_locate 2, 5, str_title_3
+    +fn_locate 2, 6, str_title_4
+
+    +fn_locate 5, 8, str_title_5
+    +fn_locate 5, 9, str_title_6
+    +fn_locate 5, 10, str_title_7
+    +fn_locate 5, 11, str_title_8
+    +fn_locate 5, 12, str_title_9
+
+    +fn_locate 9,16, str_press_enter
 
     +fn_plot 48, 0
     jsr CHRIN                       ; wait for the enter key
 
-    +fn_locate 0,10, str_ui_game_row
     lda #gamemode_game_init
     sta game_mode
     jmp change_gamemode
@@ -275,7 +286,14 @@ game_loop:
     ora #WFRAME_MOVE
     sta wait_frame
 update_game:
-    jsr optimize_object_count
+    lda frame_count
+    and #$0F
+    bne +
+    lda #$01
+    ldx #$00
+    ldy #$00
+    jsr add_to_score
++   jsr optimize_object_count
     lda #<obj_table         ; \
     sta r_obj_a             ;  |
     lda #>obj_table         ;  |- object lookup loop init
@@ -480,6 +498,7 @@ irq_done:
 !src "movements.asm"
 
 *=choregraphy_start
+.lvl1_start:
 ; insert player
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
@@ -495,177 +514,283 @@ irq_done:
 !pet CHOR_OP_CHR, 8, 4, "l"
 !pet CHOR_OP_SLP, $08
 !pet CHOR_OP_CHR, 10, 4, "1"
-!byte CHOR_OP_LDB, $04
-; first section
+!pet CHOR_OP_SLP, $10
+!pet CHOR_OP_CHR, 15, 5, "i"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 16, 5, "n"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 17, 5, "t"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 19, 5, "m"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 20, 5, "a"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 21, 5, "i"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 22, 5, "n"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 23, 5, "("
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 24, 5, ")"
+!pet CHOR_OP_SLP, $3C
+
 .lvl1_s1:
-!byte CHOR_OP_SPS, $08, $10
-!byte CHOR_OP_INS, id_mov_incr, $22
-!byte CHOR_OP_INS, id_mov_incr, $31
-!byte CHOR_OP_INS, id_mov_incr, $13
-!byte CHOR_OP_SPS, $D9, $10
-!byte CHOR_OP_INS, id_mov_dcic, $22
-!byte CHOR_OP_INS, id_mov_dcic, $31
-!byte CHOR_OP_INS, id_mov_dcic, $13
-!byte CHOR_OP_SPS, $08, $60
-!byte CHOR_OP_INS, id_mov_incr, $22
-!byte CHOR_OP_INS, id_mov_icdc, $22
-!byte CHOR_OP_SPS, $D9, $60
-!byte CHOR_OP_INS, id_mov_dcic, $22
-!byte CHOR_OP_INS, id_mov_decr, $22
-!byte CHOR_OP_SPS, $08, $D0
-!byte CHOR_OP_INS, id_mov_icdc, $22
-!byte CHOR_OP_INS, id_mov_icdc, $31
-!byte CHOR_OP_INS, id_mov_icdc, $13
-!byte CHOR_OP_SPS, $D9, $D0
-!byte CHOR_OP_INS, id_mov_decr, $22
-!byte CHOR_OP_INS, id_mov_decr, $31
-!byte CHOR_OP_INS, id_mov_decr, $13
-!byte CHOR_OP_SLP, $1A
-!byte CHOR_OP_JBN, <.rmv_lvl, >.rmv_lvl
-!byte CHOR_OP_JMP, <.lvl1_s1, >.lvl1_s1
-;;
-!byte CHOR_OP_JMP, <.lvl1_s2, >.lvl1_s2
-.rmv_lvl:
-!pet CHOR_OP_DEB
-!byte CHOR_OP_JBN, <.lvl1_s1, >.lvl1_s1
-!pet CHOR_OP_PRD, 4, 4, "       ", PET_NULL
-!byte CHOR_OP_JMP, <.lvl1_s1, >.lvl1_s1
-;;
-.lvl1_s2:
-!byte CHOR_OP_SPS, $6F, $20
-!byte CHOR_OP_INS, id_mov_dcic, $20
-!byte CHOR_OP_INS, id_mov_dcic, $21
-!byte CHOR_OP_INS, id_mov_dcic, $11
-!byte CHOR_OP_INS, id_mov_dcic, $12
+!byte CHOR_OP_LDA, $06
+!byte CHOR_OP_SPS, $18, $01
+.lvl1_s1_lp:
 !byte CHOR_OP_INS, id_mov_incr, $02
-!byte CHOR_OP_INS, id_mov_incr, $12
-!byte CHOR_OP_INS, id_mov_incr, $11
-!byte CHOR_OP_INS, id_mov_incr, $21
-!byte CHOR_OP_INS, id_mov_incr, $20
-; prepare slide loop
-!byte CHOR_OP_SPS, $20, $20
-!byte CHOR_OP_LDA, $08
-!byte CHOR_OP_SLP, $FC
-
-.choregraphy_slide:
-!byte CHOR_OP_INS, id_mov_incr, $02
-!byte CHOR_OP_INS, id_mov_incr, $12
-!byte CHOR_OP_INS, id_mov_dcic, $12
 !byte CHOR_OP_MPS, $10, $00
+!byte CHOR_OP_INS, id_mov_incr, $03
 !byte CHOR_OP_DEA
-!byte CHOR_OP_SLP, $10
-!byte CHOR_OP_JAN, <.choregraphy_slide, >.choregraphy_slide
-; next section
-!byte CHOR_OP_SLP, $30
-!byte CHOR_OP_SPS, $6F, $20
-!byte CHOR_OP_INS, id_mov_dcic, $40
-!byte CHOR_OP_SLP, $10
-!byte CHOR_OP_INS, id_mov_dcic, $31
+!byte CHOR_OP_MPS, $10, $00
+!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_JAN, <.lvl1_s1_lp, >.lvl1_s1_lp
+
+!pet CHOR_OP_PRD, 2,4, "         ", PET_NULL
+!pet CHOR_OP_PRD, 15,5,"          ", PET_NULL
+!byte CHOR_OP_SLP, $78
+
+.lvl1_s2:
+!byte CHOR_OP_LDA, $02
+
+.lvl1_s2_lp:
+!byte CHOR_OP_INS, id_mov_incr, $13
+!byte CHOR_OP_INS, id_mov_incr, $24
+!byte CHOR_OP_SPS, $E8, $08
+!byte CHOR_OP_INS, id_mov_dcic, $13
+!byte CHOR_OP_INS, id_mov_dcic, $24
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_INS, id_mov_dcic, $22
-!byte CHOR_OP_SLP, $10
-!byte CHOR_OP_INS, id_mov_dcic, $13
-!byte CHOR_OP_SLP, $10
-!byte CHOR_OP_INS, id_mov_dcic, $04
-!byte CHOR_OP_SLP, $10
-!byte CHOR_OP_INS, id_mov_incr, $13
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_INS, id_mov_dcic, $33
+!byte CHOR_OP_INS, id_mov_dcic, $44
+!byte CHOR_OP_SPS, $08, $08
 !byte CHOR_OP_INS, id_mov_incr, $22
-!byte CHOR_OP_SLP, $10
-!byte CHOR_OP_INS, id_mov_incr, $31
-!byte CHOR_OP_SLP, $10
-!byte CHOR_OP_INS, id_mov_incr, $40
-!byte CHOR_OP_LDA, $05
-!byte CHOR_OP_SLP, $30
+!byte CHOR_OP_INS, id_mov_incr, $33
+!byte CHOR_OP_INS, id_mov_incr, $44
+!byte CHOR_OP_DEA
+!byte CHOR_OP_SLP, $20
+!byte CHOR_OP_JAN, <.lvl1_s2_lp, >.lvl1_s2_lp
 
-.choregraphy_explosion:
-!byte CHOR_OP_INS, id_mov_dcic, $40
-!byte CHOR_OP_INS, id_mov_dcic, $31
-!byte CHOR_OP_INS, id_mov_dcic, $22
-!byte CHOR_OP_INS, id_mov_dcic, $13
-!byte CHOR_OP_INS, id_mov_dcic, $04
-!byte CHOR_OP_INS, id_mov_incr, $13
-!byte CHOR_OP_INS, id_mov_incr, $22
-!byte CHOR_OP_INS, id_mov_incr, $31
-!byte CHOR_OP_INS, id_mov_incr, $40
+.lvl1_s3:
+!byte CHOR_OP_LDA, $20
+!byte CHOR_OP_SPS, $00, $01
+
+.lvl1_s3_lp:
+!byte CHOR_OP_SRX
+!byte CHOR_OP_INS, id_mov_incr, $04
+!byte CHOR_OP_DEA
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_JAN, <.lvl1_s3_lp, >.lvl1_s3_lp
+!byte CHOR_OP_SLP, $20
+
+.lvl1_s4:
+!byte CHOR_OP_LDA, $20
+!byte CHOR_OP_SPS, $00, $01
+
+.lvl1_s4_lp:
+!byte CHOR_OP_SRX
+!byte CHOR_OP_INS, id_mov_incr, $06
+!byte CHOR_OP_DEA
+!byte CHOR_OP_SLP, $0B
+!byte CHOR_OP_JAN, <.lvl1_s4_lp, >.lvl1_s4_lp
+!byte CHOR_OP_SLP, $10
+
+.lvl1_s5:
+!byte CHOR_OP_LDA, $20
+!byte CHOR_OP_SPS, $00, $01
+
+.lvl1_s5_lp:
+!byte CHOR_OP_SRX
+!byte CHOR_OP_INS, id_mov_incr, $08
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $08
-!byte CHOR_OP_JAN, <.choregraphy_explosion, >.choregraphy_explosion
-
-!byte CHOR_OP_LDA, $08
-.choregraphy_slide_explosion:
-!byte CHOR_OP_SPS, $4F, $20
-!byte CHOR_OP_INS, id_mov_incr, $04
-!byte CHOR_OP_INS, id_mov_incr, $24
-!byte CHOR_OP_INS, id_mov_dcic, $24
-!byte CHOR_OP_SPS, $8F, $20
-!byte CHOR_OP_INS, id_mov_incr, $04
-!byte CHOR_OP_INS, id_mov_incr, $24
-!byte CHOR_OP_INS, id_mov_dcic, $24
-!byte CHOR_OP_DEA
+!byte CHOR_OP_JAN, <.lvl1_s5_lp, >.lvl1_s5_lp
 !byte CHOR_OP_SLP, $08
-!byte CHOR_OP_JAN, <.choregraphy_slide_explosion, >.choregraphy_slide_explosion
 
-!byte CHOR_OP_SPS, $08, $30
-!byte CHOR_OP_INS, id_mov_incr, $10
-!byte CHOR_OP_INS, id_mov_incr, $20
-!byte CHOR_OP_INS, id_mov_incr, $30
-!byte CHOR_OP_INS, id_mov_incr, $40
-!byte CHOR_OP_INS, id_mov_incr, $50
-!byte CHOR_OP_SPS, $08, $50
-!byte CHOR_OP_INS, id_mov_incr, $10
-!byte CHOR_OP_INS, id_mov_incr, $20
-!byte CHOR_OP_INS, id_mov_incr, $30
-!byte CHOR_OP_INS, id_mov_incr, $40
-!byte CHOR_OP_INS, id_mov_incr, $50
-!byte CHOR_OP_SPS, $08, $70
-!byte CHOR_OP_INS, id_mov_incr, $10
-!byte CHOR_OP_INS, id_mov_incr, $20
-!byte CHOR_OP_INS, id_mov_incr, $30
-!byte CHOR_OP_INS, id_mov_incr, $40
-!byte CHOR_OP_INS, id_mov_incr, $50
-!byte CHOR_OP_SPS, $08, $90
-!byte CHOR_OP_INS, id_mov_incr, $10
-!byte CHOR_OP_INS, id_mov_incr, $20
-!byte CHOR_OP_INS, id_mov_incr, $30
-!byte CHOR_OP_INS, id_mov_incr, $40
-!byte CHOR_OP_INS, id_mov_incr, $50
-!byte CHOR_OP_SPS, $08, $B0
-!byte CHOR_OP_INS, id_mov_incr, $10
-!byte CHOR_OP_INS, id_mov_incr, $20
-!byte CHOR_OP_INS, id_mov_incr, $30
-!byte CHOR_OP_INS, id_mov_incr, $40
-!byte CHOR_OP_INS, id_mov_incr, $50
-!byte CHOR_OP_SPS, $D9, $30
-!byte CHOR_OP_INS, id_mov_decr, $10
-!byte CHOR_OP_INS, id_mov_decr, $20
-!byte CHOR_OP_INS, id_mov_decr, $30
-!byte CHOR_OP_INS, id_mov_decr, $40
-!byte CHOR_OP_INS, id_mov_decr, $50
-!byte CHOR_OP_SPS, $D9, $50
-!byte CHOR_OP_INS, id_mov_decr, $10
-!byte CHOR_OP_INS, id_mov_decr, $20
-!byte CHOR_OP_INS, id_mov_decr, $30
-!byte CHOR_OP_INS, id_mov_decr, $40
-!byte CHOR_OP_INS, id_mov_decr, $50
-!byte CHOR_OP_SPS, $D9, $70
-!byte CHOR_OP_INS, id_mov_decr, $10
-!byte CHOR_OP_INS, id_mov_decr, $20
-!byte CHOR_OP_INS, id_mov_decr, $30
-!byte CHOR_OP_INS, id_mov_decr, $40
-!byte CHOR_OP_INS, id_mov_decr, $50
-!byte CHOR_OP_SPS, $D9, $90
-!byte CHOR_OP_INS, id_mov_decr, $10
-!byte CHOR_OP_INS, id_mov_decr, $20
-!byte CHOR_OP_INS, id_mov_decr, $30
-!byte CHOR_OP_INS, id_mov_decr, $40
-!byte CHOR_OP_INS, id_mov_decr, $50
-!byte CHOR_OP_SPS, $D9, $B0
-!byte CHOR_OP_INS, id_mov_decr, $10
-!byte CHOR_OP_INS, id_mov_decr, $20
-!byte CHOR_OP_INS, id_mov_decr, $30
-!byte CHOR_OP_INS, id_mov_decr, $40
-!byte CHOR_OP_INS, id_mov_decr, $50
+.lvl1_s6:
+!byte CHOR_OP_LDA, $30
+!byte CHOR_OP_SPS, $00, $01
+
+.lvl1_s6_lp:
+!byte CHOR_OP_SRX
+!byte CHOR_OP_INS, id_mov_incr, $0C
+!byte CHOR_OP_DEA
+!byte CHOR_OP_SLP, $04
+!byte CHOR_OP_JAN, <.lvl1_s6_lp, >.lvl1_s6_lp
+!byte CHOR_OP_SLP, $3C
+
+.lvl1_boss1:
+
+; first section
+; .lvl1_s1:
+; !byte CHOR_OP_SPS, $08, $10
+; !byte CHOR_OP_INS, id_mov_incr, $22
+; !byte CHOR_OP_INS, id_mov_incr, $31
+; !byte CHOR_OP_INS, id_mov_incr, $13
+; !byte CHOR_OP_SPS, $D9, $10
+; !byte CHOR_OP_INS, id_mov_dcic, $22
+; !byte CHOR_OP_INS, id_mov_dcic, $31
+; !byte CHOR_OP_INS, id_mov_dcic, $13
+; !byte CHOR_OP_SPS, $08, $60
+; !byte CHOR_OP_INS, id_mov_incr, $22
+; !byte CHOR_OP_INS, id_mov_icdc, $22
+; !byte CHOR_OP_SPS, $D9, $60
+; !byte CHOR_OP_INS, id_mov_dcic, $22
+; !byte CHOR_OP_INS, id_mov_decr, $22
+; !byte CHOR_OP_SPS, $08, $D0
+; !byte CHOR_OP_INS, id_mov_icdc, $22
+; !byte CHOR_OP_INS, id_mov_icdc, $31
+; !byte CHOR_OP_INS, id_mov_icdc, $13
+; !byte CHOR_OP_SPS, $D9, $D0
+; !byte CHOR_OP_INS, id_mov_decr, $22
+; !byte CHOR_OP_INS, id_mov_decr, $31
+; !byte CHOR_OP_INS, id_mov_decr, $13
+; !byte CHOR_OP_SLP, $1A
+; !byte CHOR_OP_JBN, <.rmv_lvl, >.rmv_lvl
+; !byte CHOR_OP_JMP, <.lvl1_s1, >.lvl1_s1
+; ;;
+; !byte CHOR_OP_JMP, <.lvl1_s2, >.lvl1_s2
+; .rmv_lvl:
+; !pet CHOR_OP_DEB
+; !byte CHOR_OP_JBN, <.lvl1_s1, >.lvl1_s1
+; !pet CHOR_OP_PRD, 4, 4, "       ", PET_NULL
+; !byte CHOR_OP_JMP, <.lvl1_s1, >.lvl1_s1
+; ;;
+; .lvl1_s2:
+; !byte CHOR_OP_SPS, $6F, $20
+; !byte CHOR_OP_INS, id_mov_dcic, $20
+; !byte CHOR_OP_INS, id_mov_dcic, $21
+; !byte CHOR_OP_INS, id_mov_dcic, $11
+; !byte CHOR_OP_INS, id_mov_dcic, $12
+; !byte CHOR_OP_INS, id_mov_incr, $02
+; !byte CHOR_OP_INS, id_mov_incr, $12
+; !byte CHOR_OP_INS, id_mov_incr, $11
+; !byte CHOR_OP_INS, id_mov_incr, $21
+; !byte CHOR_OP_INS, id_mov_incr, $20
+; ; prepare slide loop
+; !byte CHOR_OP_SPS, $20, $20
+; !byte CHOR_OP_LDA, $08
+; !byte CHOR_OP_SLP, $FC
+
+; .choregraphy_slide:
+; !byte CHOR_OP_INS, id_mov_incr, $02
+; !byte CHOR_OP_INS, id_mov_incr, $12
+; !byte CHOR_OP_INS, id_mov_dcic, $12
+; !byte CHOR_OP_MPS, $10, $00
+; !byte CHOR_OP_DEA
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_JAN, <.choregraphy_slide, >.choregraphy_slide
+; ; next section
+; !byte CHOR_OP_SLP, $30
+; !byte CHOR_OP_SPS, $6F, $20
+; !byte CHOR_OP_INS, id_mov_dcic, $40
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_dcic, $31
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_dcic, $22
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_dcic, $13
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_dcic, $04
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_incr, $13
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_incr, $22
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_incr, $31
+; !byte CHOR_OP_SLP, $10
+; !byte CHOR_OP_INS, id_mov_incr, $40
+; !byte CHOR_OP_LDA, $05
+; !byte CHOR_OP_SLP, $30
+
+; .choregraphy_explosion:
+; !byte CHOR_OP_INS, id_mov_dcic, $40
+; !byte CHOR_OP_INS, id_mov_dcic, $31
+; !byte CHOR_OP_INS, id_mov_dcic, $22
+; !byte CHOR_OP_INS, id_mov_dcic, $13
+; !byte CHOR_OP_INS, id_mov_dcic, $04
+; !byte CHOR_OP_INS, id_mov_incr, $13
+; !byte CHOR_OP_INS, id_mov_incr, $22
+; !byte CHOR_OP_INS, id_mov_incr, $31
+; !byte CHOR_OP_INS, id_mov_incr, $40
+; !byte CHOR_OP_DEA
+; !byte CHOR_OP_SLP, $08
+; !byte CHOR_OP_JAN, <.choregraphy_explosion, >.choregraphy_explosion
+
+; !byte CHOR_OP_LDA, $08
+; .choregraphy_slide_explosion:
+; !byte CHOR_OP_SPS, $4F, $20
+; !byte CHOR_OP_INS, id_mov_incr, $04
+; !byte CHOR_OP_INS, id_mov_incr, $24
+; !byte CHOR_OP_INS, id_mov_dcic, $24
+; !byte CHOR_OP_SPS, $8F, $20
+; !byte CHOR_OP_INS, id_mov_incr, $04
+; !byte CHOR_OP_INS, id_mov_incr, $24
+; !byte CHOR_OP_INS, id_mov_dcic, $24
+; !byte CHOR_OP_DEA
+; !byte CHOR_OP_SLP, $08
+; !byte CHOR_OP_JAN, <.choregraphy_slide_explosion, >.choregraphy_slide_explosion
+
+; !byte CHOR_OP_SPS, $08, $30
+; !byte CHOR_OP_INS, id_mov_incr, $10
+; !byte CHOR_OP_INS, id_mov_incr, $20
+; !byte CHOR_OP_INS, id_mov_incr, $30
+; !byte CHOR_OP_INS, id_mov_incr, $40
+; !byte CHOR_OP_INS, id_mov_incr, $50
+; !byte CHOR_OP_SPS, $08, $50
+; !byte CHOR_OP_INS, id_mov_incr, $10
+; !byte CHOR_OP_INS, id_mov_incr, $20
+; !byte CHOR_OP_INS, id_mov_incr, $30
+; !byte CHOR_OP_INS, id_mov_incr, $40
+; !byte CHOR_OP_INS, id_mov_incr, $50
+; !byte CHOR_OP_SPS, $08, $70
+; !byte CHOR_OP_INS, id_mov_incr, $10
+; !byte CHOR_OP_INS, id_mov_incr, $20
+; !byte CHOR_OP_INS, id_mov_incr, $30
+; !byte CHOR_OP_INS, id_mov_incr, $40
+; !byte CHOR_OP_INS, id_mov_incr, $50
+; !byte CHOR_OP_SPS, $08, $90
+; !byte CHOR_OP_INS, id_mov_incr, $10
+; !byte CHOR_OP_INS, id_mov_incr, $20
+; !byte CHOR_OP_INS, id_mov_incr, $30
+; !byte CHOR_OP_INS, id_mov_incr, $40
+; !byte CHOR_OP_INS, id_mov_incr, $50
+; !byte CHOR_OP_SPS, $08, $B0
+; !byte CHOR_OP_INS, id_mov_incr, $10
+; !byte CHOR_OP_INS, id_mov_incr, $20
+; !byte CHOR_OP_INS, id_mov_incr, $30
+; !byte CHOR_OP_INS, id_mov_incr, $40
+; !byte CHOR_OP_INS, id_mov_incr, $50
+; !byte CHOR_OP_SPS, $D9, $30
+; !byte CHOR_OP_INS, id_mov_decr, $10
+; !byte CHOR_OP_INS, id_mov_decr, $20
+; !byte CHOR_OP_INS, id_mov_decr, $30
+; !byte CHOR_OP_INS, id_mov_decr, $40
+; !byte CHOR_OP_INS, id_mov_decr, $50
+; !byte CHOR_OP_SPS, $D9, $50
+; !byte CHOR_OP_INS, id_mov_decr, $10
+; !byte CHOR_OP_INS, id_mov_decr, $20
+; !byte CHOR_OP_INS, id_mov_decr, $30
+; !byte CHOR_OP_INS, id_mov_decr, $40
+; !byte CHOR_OP_INS, id_mov_decr, $50
+; !byte CHOR_OP_SPS, $D9, $70
+; !byte CHOR_OP_INS, id_mov_decr, $10
+; !byte CHOR_OP_INS, id_mov_decr, $20
+; !byte CHOR_OP_INS, id_mov_decr, $30
+; !byte CHOR_OP_INS, id_mov_decr, $40
+; !byte CHOR_OP_INS, id_mov_decr, $50
+; !byte CHOR_OP_SPS, $D9, $90
+; !byte CHOR_OP_INS, id_mov_decr, $10
+; !byte CHOR_OP_INS, id_mov_decr, $20
+; !byte CHOR_OP_INS, id_mov_decr, $30
+; !byte CHOR_OP_INS, id_mov_decr, $40
+; !byte CHOR_OP_INS, id_mov_decr, $50
+; !byte CHOR_OP_SPS, $D9, $B0
+; !byte CHOR_OP_INS, id_mov_decr, $10
+; !byte CHOR_OP_INS, id_mov_decr, $20
+; !byte CHOR_OP_INS, id_mov_decr, $30
+; !byte CHOR_OP_INS, id_mov_decr, $40
+; !byte CHOR_OP_INS, id_mov_decr, $50
 
 .choregraphy_end:
 !byte CHOR_OP_SLP, $FF

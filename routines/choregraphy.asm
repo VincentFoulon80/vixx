@@ -9,6 +9,8 @@ CHOR_OP_CHM = $02 ; CHange Mode             : mode
 CHOR_OP_SPS = $03 ; Set PoSition (absolute) : pos_x, pos_y
 CHOR_OP_MPS = $04 ; Move PoSition (relative): delta_x, delta_y
 CHOR_OP_FPS = $05 ; Fast Move Position (rel): delta_xy
+CHOR_OP_SRX = $06 ; Set Random X position   ;
+CHOR_OP_SRY = $07 ; Set Random Y position   ;
 CHOR_OP_PRT = $20 ; PRinT text              : pos_x, pos_y, str_addr_l, str_addr_h
 CHOR_OP_PRD = $21 ; PRint Direct mode       : pos_x, pos_y, ...null_terminated_str
 CHOR_OP_CHR = $22 ; print CHaR              : pos_x, pos_y, character
@@ -98,6 +100,18 @@ run_choregraphy:
         clc
         adc choregraphy_pos_y
         sta choregraphy_pos_y
+    jmp .chor_end
++
+    cmp #CHOR_OP_SRX
+    bne +
+        jsr rng
+        sta choregraphy_pos_x
+    jmp .chor_end
++
+    cmp #CHOR_OP_SRY
+    bne +
+        jsr rng
+        sta choregraphy_pos_y        
     jmp .chor_end
 +
     cmp #CHOR_OP_PRT
