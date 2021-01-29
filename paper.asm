@@ -105,6 +105,7 @@ choregraphy_sleep = $35
 choregraphy_reg_a = $36
 choregraphy_reg_b = $37
 
+randomize_rng = $74
 invincibility_cnt = $75
 lives = $76
 score_87 = $77
@@ -141,4 +142,5 @@ game_mode = $7F
     sta rng_seed_0
     lda #$84
     sta rng_seed_1
+    stz randomize_rng
 }

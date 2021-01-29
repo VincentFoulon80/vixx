@@ -184,7 +184,11 @@ title_screen:
     +fn_locate 9,16, str_press_enter
 
     +fn_plot 48, 0
+    
+    lda #$01
+    sta randomize_rng
     jsr CHRIN                       ; wait for the enter key
+    stz randomize_rng
 
     lda #gamemode_game_init
     sta game_mode
@@ -479,6 +483,11 @@ draw_sprites_lp:            ;  |
     jmp draw_sprites_lp
 draw_sprites_done:
 
+    lda randomize_rng
+    beq +
+    jsr rng
++
+
 irq_done:
     stz wait_frame
     inc frame_count
@@ -581,7 +590,7 @@ irq_done:
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_JAN, <.lvl1_s3_lp, >.lvl1_s3_lp
-!byte CHOR_OP_SLP, $20
+!byte CHOR_OP_SLP, $10
 
 .lvl1_s4:
 !byte CHOR_OP_LDA, $20
@@ -589,11 +598,10 @@ irq_done:
 
 .lvl1_s4_lp:
 !byte CHOR_OP_SRX
-!byte CHOR_OP_INS, id_mov_incr, $06
+!byte CHOR_OP_INS, id_mov_incr, $05
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $0B
 !byte CHOR_OP_JAN, <.lvl1_s4_lp, >.lvl1_s4_lp
-!byte CHOR_OP_SLP, $10
 
 .lvl1_s5:
 !byte CHOR_OP_LDA, $20
@@ -601,11 +609,10 @@ irq_done:
 
 .lvl1_s5_lp:
 !byte CHOR_OP_SRX
-!byte CHOR_OP_INS, id_mov_incr, $08
+!byte CHOR_OP_INS, id_mov_incr, $07
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $08
 !byte CHOR_OP_JAN, <.lvl1_s5_lp, >.lvl1_s5_lp
-!byte CHOR_OP_SLP, $08
 
 .lvl1_s6:
 !byte CHOR_OP_LDA, $30
@@ -613,7 +620,7 @@ irq_done:
 
 .lvl1_s6_lp:
 !byte CHOR_OP_SRX
-!byte CHOR_OP_INS, id_mov_incr, $0C
+!byte CHOR_OP_INS, id_mov_incr, $0B
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $04
 !byte CHOR_OP_JAN, <.lvl1_s6_lp, >.lvl1_s6_lp
