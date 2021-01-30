@@ -72,6 +72,8 @@ str_title_9:
 
 
 str_press_enter !pet PET_COLOR_BLACK, PET_COLOR_SWAP, PET_COLOR_WHITE,"press enter",PET_COLOR_BLACK,PET_NULL
+str_press_start !pet PET_COLOR_BLACK, PET_COLOR_SWAP, PET_COLOR_WHITE,"press start",PET_COLOR_BLACK,PET_NULL
+
 str_game_over !pet PET_COLOR_BLACK, PET_COLOR_SWAP, PET_COLOR_WHITE,"game over",PET_COLOR_BLACK,PET_NULL
 str_new_hiscore !pet PET_COLOR_BLACK, PET_COLOR_SWAP, PET_COLOR_YELLOW,"new high score!",PET_COLOR_BLACK,PET_NULL
 

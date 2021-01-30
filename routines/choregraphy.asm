@@ -14,6 +14,8 @@ CHOR_OP_SRY = $07 ; Set Random Y position   ;
 CHOR_OP_PRT = $20 ; PRinT text              : pos_x, pos_y, str_addr_l, str_addr_h
 CHOR_OP_PRD = $21 ; PRint Direct mode       : pos_x, pos_y, ...null_terminated_str
 CHOR_OP_CHR = $22 ; print CHaR              : pos_x, pos_y, character
+CHOR_OP_SBG = $23 ; Set BackGround          ; tile_id
+CHOR_OP_SCR = $24 ; change SCRoll speed     ; speed
 CHOR_OP_LDA = $30 ; LoaD regA               : immediate value
 CHOR_OP_INA = $31 ; INcrement regA          : 
 CHOR_OP_DEA = $32 ; DEcregment regA         :
@@ -157,6 +159,18 @@ run_choregraphy:
         jsr PLOT
         jsr .chor_next_byte
         jsr CHROUT
+    jmp .chor_end
++
+    cmp #CHOR_OP_SBG
+    bne +
+        jsr .chor_next_byte
+        jsr fill_layer0
+    jmp .chor_end
++
+    cmp #CHOR_OP_SCR
+    bne +
+        jsr .chor_next_byte
+        sta scroll_speed
     jmp .chor_end
 +
     cmp #CHOR_OP_LDA

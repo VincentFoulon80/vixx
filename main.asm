@@ -20,12 +20,18 @@ prg_boot:
     +basic_startup 
     +fn_vera_init_subroutines
     +game_video_init 
+
+    ; upload tiles
+    +fn_vera_upload t_empty, $10|t_empty_bank, t_empty_address, t_empty_packet_size, t_empty_packet_qty
+    +fn_vera_upload t_square, $10|t_square_bank, t_square_address, t_square_packet_size, t_square_packet_qty
+
+    ; upload sprites
+    +fn_vera_upload bullet, $10|bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty    ; $11 = increment 1, bank 0, $0000 = address, $FF = size+1, $01 = 1 times
+    +fn_vera_upload player, $10|player_bank, player_address, player_packet_size, player_packet_qty
+
     +game_init
 
-    ;setup player sprite
-    +fn_vera_upload bullet, $10+bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty    ; $11 = increment 1, bank 0, $0000 = address, $FF = size+1, $01 = 1 times
-    +fn_vera_upload player, $10+player_bank, player_address, player_packet_size, player_packet_qty
-
+    ; initializes sprites
     +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite ; increment 1, bank 1, address FC00 + index*8
 
     lda #player_spid                                    ; \
@@ -61,10 +67,7 @@ prg_boot:
     dex                                                 ;  |
     bne -                                               ; /
 
-    +fn_vera_set_video vera_video_mask_sprite | vera_video_mask_layer1 | vera_video_mask_output_vga
-    jsr clear_layer0
-    jsr clear_layer1
-
+    ; prepare game
     +fn_irq_init kernal_irq, vsync_loop
 
     lda #gamemode_title
@@ -181,14 +184,15 @@ title_screen:
     +fn_locate 5, 11, str_title_8
     +fn_locate 5, 12, str_title_9
 
-    +fn_locate 9,16, str_press_enter
+    +fn_locate 9,16, str_press_start
 
     +fn_plot 48, 0
     
-    lda #$01
-    sta randomize_rng
-    jsr CHRIN                       ; wait for the enter key
-    stz randomize_rng
+-   jsr rng
+    lda #0
+    jsr joystick_get        ; fetch joy0
+    and #joystick_mask_start
+    bne -
 
     lda #gamemode_game_init
     sta game_mode
@@ -483,10 +487,28 @@ draw_sprites_lp:            ;  |
     jmp draw_sprites_lp
 draw_sprites_done:
 
-    lda randomize_rng
-    beq +
-    jsr rng
-+
+autoscroll:
+    lda scroll_speed            ; \
+    beq autoscroll_done         ;  |
+    tax                         ;  |- extract bit 7 - 2
+    clc                         ;  |  and store into tmp var
+    ror                         ;  |
+    clc                         ;  |
+    ror                         ;  |
+    sta unsafe_addr_l           ; /
+    txa                         ; \
+    and #$03                    ;  |- extract bit 1-0
+    beq +                       ;  |
+    sta unsafe_addr_h           ; /
+    and frame_count             ; \
+    cmp unsafe_addr_h           ;  |- handle 1/4 movements
+    bne +                       ;  |
+    dec vera_layer0_vscroll_L   ; /
++   lda vera_layer0_vscroll_L   ; \
+    sec                         ;  |- handle integer movements
+    sbc unsafe_addr_l           ;  |
+    sta vera_layer0_vscroll_L   ; /
+autoscroll_done:
 
 irq_done:
     stz wait_frame
@@ -501,17 +523,18 @@ irq_done:
 ; ###  ##  ##  ######  ######  ######  ######  ##  ##  ######  ######  ######  ##########################
 ; =======================================================================================================
 
+!src "movements.asm"
+
 !src "resources/strings.asm"
 !src "resources/sprites.asm"
-
-!src "movements.asm"
+!src "resources/tiles.asm"
 
 *=choregraphy_start
 .lvl1_start:
 ; insert player
+!byte CHOR_OP_SBG, t_square_id
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
-;!byte CHOR_OP_PRT, $04, $04, <str_press_enter, >str_press_enter
 !pet CHOR_OP_CHR, 4, 4, "l"
 !pet CHOR_OP_SLP, $08
 !pet CHOR_OP_CHR, 5, 4, "e"
@@ -541,7 +564,16 @@ irq_done:
 !pet CHOR_OP_CHR, 23, 5, "("
 !pet CHOR_OP_SLP, $08
 !pet CHOR_OP_CHR, 24, 5, ")"
-!pet CHOR_OP_SLP, $3C
+!byte CHOR_OP_SCR, $03
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SCR, $02
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SCR, $01
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SCR, $04
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $3C
+
 
 .lvl1_s1:
 !byte CHOR_OP_LDA, $06

@@ -105,7 +105,7 @@ choregraphy_sleep = $35
 choregraphy_reg_a = $36
 choregraphy_reg_b = $37
 
-randomize_rng = $74
+scroll_speed = $74
 invincibility_cnt = $75
 lives = $76
 score_87 = $77
@@ -133,6 +133,16 @@ game_mode = $7F
     sta vera_vscale
     lda #64
     sta vera_hscale
+
+    +fn_vera_set_layer0_config vera_layer_config_map_width_32tiles | vera_layer_config_map_height_64tiles | vera_layer_config_color_depth_8bpp
+    +fn_vera_set_layer0_tilebase $80 | vera_layer_tilebase_tile_width_8px | vera_layer_tilebase_tile_height_8px
+    +fn_vera_set_layer0_mapbase (vram_layer0_mapbase_b << 7) | ((vram_layer0_mapbase >> 9) & %01111111)
+
+    +fn_vera_set_video vera_video_mask_sprite | vera_video_mask_layer0 | vera_video_mask_layer1 | vera_video_mask_output_vga
+
+
+    jsr clear_layer0
+    jsr clear_layer1
     +fn_print str_white_on_black
 }
 
@@ -142,5 +152,7 @@ game_mode = $7F
     sta rng_seed_0
     lda #$84
     sta rng_seed_1
-    stz randomize_rng
+
+    +fn_locate 2,2, str_press_enter
+    jsr CHRIN
 }

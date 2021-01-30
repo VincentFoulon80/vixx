@@ -44,6 +44,7 @@ init_game_screen:
 
 ; ###########################
 init_game:                  ;
+    stz scroll_speed        ; 
     lda #<choregraphy_start ;
     sta choregraphy_pc_l    ;
     lda #>choregraphy_start ;

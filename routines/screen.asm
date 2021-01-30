@@ -62,6 +62,22 @@ clear_layer1_color_lp:
     bne clear_layer1_color_lp
     rts
 
+
+fill_layer0:
+    pha
+    ; set screen tiles to 
+    +fn_vera_set_address $20 + vram_layer0_mapbase_b, vram_layer0_mapbase
+    ldy #$20
+    pla
+fill_layer0_char_lp:
+-   sta vera_data_0
+    dex
+    bne -
+    dey
+    bne fill_layer0_char_lp
+
+    rts
+
 ; =======================================================================================================
 ; ###  PRINTING  ########################################################################################
 ; =======================================================================================================
