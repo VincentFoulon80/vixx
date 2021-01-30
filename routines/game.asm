@@ -9,6 +9,7 @@
 
 ; ###########################
 init_game_screen:
+    stz scroll_speed
     +fn_locate 0, 0, str_ui_full_row
     +fn_print str_ui_game_row
     +fn_print str_ui_hiscore_lbl_row
@@ -44,7 +45,6 @@ init_game_screen:
 
 ; ###########################
 init_game:                  ;
-    stz scroll_speed        ; 
     lda #<choregraphy_start ;
     sta choregraphy_pc_l    ;
     lda #>choregraphy_start ;

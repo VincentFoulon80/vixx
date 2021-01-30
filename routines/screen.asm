@@ -16,7 +16,7 @@ clear_layer0:
     ; set screen tiles to 
     +fn_vera_set_address $20 + vram_layer0_mapbase_b, vram_layer0_mapbase
     lda #$00
-    ldy #$20
+    ldy #$09
 clear_layer0_char_lp:
     ldx #0
 -   sta vera_data_0
@@ -27,7 +27,7 @@ clear_layer0_char_lp:
     ; set screen colors to transparent
     +fn_vera_set_address $20 + vram_layer0_mapbase_b, vram_layer0_mapbase+1
     lda #$00
-    ldy #$20
+    ldy #$09
 clear_layer0_color_lp:
     ldx #0
 -   sta vera_data_0
@@ -67,7 +67,7 @@ fill_layer0:
     pha
     ; set screen tiles to 
     +fn_vera_set_address $20 + vram_layer0_mapbase_b, vram_layer0_mapbase
-    ldy #$20
+    ldy #$09
     pla
 fill_layer0_char_lp:
 -   sta vera_data_0
@@ -75,7 +75,6 @@ fill_layer0_char_lp:
     bne -
     dey
     bne fill_layer0_char_lp
-
     rts
 
 ; =======================================================================================================
