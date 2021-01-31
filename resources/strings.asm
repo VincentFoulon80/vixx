@@ -8,8 +8,8 @@ SWP = PET_COLOR_SWAP
 
 
 file_hiscore_len = 11
-file_hiscore_w !pet "@:bhellsc,s,w"
-file_hiscore_r !pet "bhellsc,s,r"
+file_hiscore_w !pet "@:vixx.sc,s,w"
+file_hiscore_r !pet "vixx.sc,s,r"
 
 str_white_on_black !pet PET_COLOR_BLACK, PET_COLOR_SWAP, PET_COLOR_WHITE, PET_NULL
 str_color_score !pet PET_COLOR_DGRAY, PET_COLOR_SWAP, PET_COLOR_YELLOW, PET_NULL

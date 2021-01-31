@@ -128,7 +128,7 @@ title_screen:
     lda hiscore_87
     bne .score_loaded
 
-.load_score
+.load_score:
     ; LOAD SCORE
     lda #HISCORE_FILE       ; \
     ldx #HISCORE_DEVICE     ;  |- prepare logical file
@@ -166,7 +166,7 @@ title_screen:
     jsr CLOSE               ;  |- close the file and reset channels
     jsr CLRCHN              ; /
 
-.score_loaded
+.score_loaded:
     lda #t_empty_id
     jsr fill_layer0
     jsr init_game_screen
@@ -453,6 +453,12 @@ vsync_loop:
     jmp irq_done
 +
 
+backup_vera_addr:
+    lda vera_high_addr
+    pha
+    lda vera_low_addr
+    pha
+
 draw_sprites:
     lda #%00010001          ; \_ set vera stride & bank values
     sta vera_stride_bank    ; /
@@ -512,6 +518,12 @@ autoscroll:
     sbc unsafe_addr_l           ;  |
     sta vera_layer0_vscroll_L   ; /
 autoscroll_done:
+
+restore_vera_addr:
+    pla
+    sta vera_low_addr
+    pla
+    sta vera_high_addr
 
 irq_done:
     stz wait_frame
@@ -598,7 +610,7 @@ irq_done:
 
 .lvl1_s2:
 !byte CHOR_OP_SPS, $20, $20
-!byte CHOR_OP_LDA, $08
+!byte CHOR_OP_LDA, $0B
 
 .lvl1_s2_lp:
 !byte CHOR_OP_INS, id_mov_incr, $02
