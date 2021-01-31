@@ -5,23 +5,31 @@ CHOR_MODE_TRACKING = $01
 
 CHOR_OP_SLP = $00 ; SLeeP                   : amount
 CHOR_OP_INS = $01 ; INSert object           : type, param
-CHOR_OP_CHM = $02 ; CHange Mode             : mode
-CHOR_OP_SPS = $03 ; Set PoSition (absolute) : pos_x, pos_y
-CHOR_OP_MPS = $04 ; Move PoSition (relative): delta_x, delta_y
-CHOR_OP_FPS = $05 ; Fast Move Position (rel): delta_xy
-CHOR_OP_SRX = $06 ; Set Random X position   ;
-CHOR_OP_SRY = $07 ; Set Random Y position   ;
+CHOR_OP_BIS = $02 ; Bulk InSert             : count, (type, param,)
+CHOR_OP_CHM = $03 ; CHange Mode             : mode
+CHOR_OP_SPS = $04 ; Set PoSition (absolute) : pos_x, pos_y
+CHOR_OP_MPS = $05 ; Move PoSition (relative): delta_x, delta_y
+CHOR_OP_FPS = $06 ; Fast Move Position (rel): delta_xy
+CHOR_OP_SRX = $07 ; Set Random X position   ;
+CHOR_OP_SRY = $08 ; Set Random Y position   ;
+
 CHOR_OP_PRT = $20 ; PRinT text              : pos_x, pos_y, str_addr_l, str_addr_h
 CHOR_OP_PRD = $21 ; PRint Direct mode       : pos_x, pos_y, ...null_terminated_str
 CHOR_OP_CHR = $22 ; print CHaR              : pos_x, pos_y, character
 CHOR_OP_SBG = $23 ; Set BackGround          ; tile_id
 CHOR_OP_SCR = $24 ; change SCRoll speed     ; speed
+
 CHOR_OP_LDA = $30 ; LoaD regA               : immediate value
 CHOR_OP_INA = $31 ; INcrement regA          : 
 CHOR_OP_DEA = $32 ; DEcregment regA         :
 CHOR_OP_LDB = $33 ; LoaD regB               : immediate value
 CHOR_OP_INB = $34 ; INcrement regB          : 
 CHOR_OP_DEB = $35 ; DEcregment regB         :
+
+CHOR_OP_SPR = $A0 ; change SPRite           ; from, to, spid
+CHOR_OP_MOB = $A1 ; Move OBject             ; obj_id, pos_x, pos_y
+CHOR_OP_COB = $A2 ; Configure OBject        ; obj_id, type, param
+
 CHOR_OP_JMP = $E0 ; JuMP to address         : addr_l, addr_h
 CHOR_OP_JAZ = $E1 ; Jump If regA is Zero    : addr_l, addr_h
 CHOR_OP_JAN = $E2 ; Jump If regA is Not zero: addr_l, addr_h
@@ -29,6 +37,7 @@ CHOR_OP_JBZ = $E3 ; Jump If regB is Zero    : addr_l, addr_h
 CHOR_OP_JBN = $E4 ; Jump If regB is Not zero: addr_l, addr_h
 CHOR_OP_JXZ = $E5 ; Jump if posX is Zero    : addr_l, addr_h
 CHOR_OP_JYZ = $E6 ; Jump if posY is Zero    : addr_l, addr_h
+
 CHOR_OP_EXC = $FF ; EXeCute code            : address_l, address_y
 
 run_choregraphy:
@@ -61,6 +70,23 @@ run_choregraphy:
         jsr .chor_next_byte
         sta r_obj_p
         jsr insert_object
+    jmp .chor_end
++
+    cmp #CHOR_OP_BIS
+    bne +
+        jsr .chor_set_pos
+        jsr .chor_next_byte
+        tax
+        .op_bis_lp:
+            jsr .chor_next_byte
+            sta r_obj_t
+            jsr .chor_next_byte
+            sta r_obj_p
+            phx
+            jsr insert_object
+            plx
+            dex
+            bne .op_bis_lp
     jmp .chor_end
 +
     cmp #CHOR_OP_CHM
@@ -203,6 +229,64 @@ run_choregraphy:
     cmp #CHOR_OP_DEB
     bne +
         dec choregraphy_reg_b
+    jmp .chor_end
++
+    cmp #CHOR_OP_SPR
+    bne +
+        jsr .chor_next_byte
+        tax
+        jsr .chor_next_byte
+        tay
+        jsr .chor_next_byte
+        jsr change_obj_sprite
+    jmp .chor_end
++
+    cmp #CHOR_OP_MOB
+    bne +
+        stz x16_r0_l
+        stz x16_r0_h
+        jsr .chor_next_byte
+        tax
+        -   clc
+            +adc16 x16_r0, $04
+            dex
+            bne -
+        lda #<obj_table+2
+        clc
+        adc x16_r0_l
+        sta x16_r0_l
+        lda #>obj_table
+        adc x16_r0_h
+        sta x16_r0_h
+        jsr .chor_next_byte
+        sta (x16_r0_l)
+        +inc16 x16_r0
+        jsr .chor_next_byte
+        sta (x16_r0_l)
+    jmp .chor_end
++
+    cmp #CHOR_OP_COB
+    bne +
+        stz x16_r0_l
+        stz x16_r0_h
+        jsr .chor_next_byte
+        tax
+        -   clc
+            +adc16 x16_r0, $04
+            dex
+            bne -
+        lda #<obj_table
+        clc
+        adc x16_r0_l
+        sta x16_r0_l
+        lda #>obj_table
+        adc x16_r0_h
+        sta x16_r0_h
+        jsr .chor_next_byte
+        sta (x16_r0_l)
+        +inc16 x16_r0
+        jsr .chor_next_byte
+        sta (x16_r0_l)
     jmp .chor_end
 +
     cmp #CHOR_OP_JMP

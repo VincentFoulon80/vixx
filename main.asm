@@ -20,52 +20,77 @@ prg_boot:
     +basic_startup 
     +fn_vera_init_subroutines
     +game_video_init 
-
+    
     ; upload tiles
     +fn_vera_upload t_empty, $10|t_empty_bank, t_empty_address, t_empty_packet_size, t_empty_packet_qty
-    +fn_vera_upload t_square, $10|t_square_bank, t_square_address, t_square_packet_size, t_square_packet_qty
+    +fn_vera_direct_upload t_square, t_square_packet_size, t_square_packet_qty
+    +fn_vera_direct_upload t_trace, t_trace_packet_size, t_trace_packet_qty
+    +fn_vera_direct_upload t_scanl, t_scanl_packet_size, t_scanl_packet_qty
+
 
     ; upload sprites
-    +fn_vera_upload bullet, $10|bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty    ; $11 = increment 1, bank 0, $0000 = address, $FF = size+1, $01 = 1 times
-    +fn_vera_upload player, $10|player_bank, player_address, player_packet_size, player_packet_qty
+    +fn_vera_upload bullet, $10|bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty
+    +fn_vera_direct_upload player, player_packet_size, player_packet_qty
+    +fn_vera_direct_upload touched_player, touched_player_packet_size, touched_player_packet_qty
+    +fn_vera_direct_upload virus1, virus1_packet_size, virus1_packet_qty
+    +fn_vera_direct_upload virus2, virus2_packet_size, virus2_packet_qty
+    +fn_vera_direct_upload virus3, virus3_packet_size, virus3_packet_qty
+    +fn_vera_direct_upload virus4, virus4_packet_size, virus4_packet_qty
+    +fn_vera_direct_upload virus5, virus5_packet_size, virus5_packet_qty
+    +fn_vera_direct_upload virus6, virus6_packet_size, virus6_packet_qty
 
     +game_init
 
     ; initializes sprites
     +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite ; increment 1, bank 1, address FC00 + index*8
 
-    lda #player_spid                                    ; \
-    sta vera_data_0                                     ;  |
-    lda #player_spid_def                                ;  |
-    sta vera_data_0                                     ;  |
-    stz vera_data_0 ; pos x (low)                       ;  |- init player sprite
-    stz vera_data_0 ; pos x (high)                      ;  |
-    stz vera_data_0 ; pos y (low)                       ;  |
-    stz vera_data_0 ; pos y (high)                      ;  |
-                                                        ;  |
-    lda #vera_sprite_zdepth_behind_layer1               ;  |
-    sta vera_data_0                                     ;  |
-    lda #vera_sprite_width_8px | vera_sprite_height_8px ;  |
-    sta vera_data_0                                     ; /
+    lda #player_spid                        ; \
+    sta vera_data_0                         ;  |
+    lda #player_spid_def                    ;  |
+    sta vera_data_0                         ;  |
+    stz vera_data_0 ; pos x (low)           ;  |- init player sprite
+    stz vera_data_0 ; pos x (high)          ;  |
+    stz vera_data_0 ; pos y (low)           ;  |
+    stz vera_data_0 ; pos y (high)          ;  |
+                                            ;  |
+    lda #vera_sprite_zdepth_behind_layer1   ;  |
+    sta vera_data_0                         ;  |
+    lda #player_spid_size                   ;  |
+    sta vera_data_0                         ; /
 
-    ldx #$7E
--                                                       ; \
-    lda #bullet_spid                                    ;  |  
-    sta vera_data_0                                     ;  |- init all sprites
-    lda #bullet_spid_def                                ;  |
-    sta vera_data_0 ; addr_mode                         ;  |
-    stz vera_data_0 ; pos x (low)                       ;  |- init bullet sprites
-    stz vera_data_0 ; pos x (high)                      ;  |
-    stz vera_data_0 ; pos y (low)                       ;  |
-    stz vera_data_0 ; pos y (high)                      ;  |
-                                                        ;  |
-    lda #vera_sprite_zdepth_behind_layer1               ;  |
-    sta vera_data_0                                     ;  |
-    lda #vera_sprite_width_8px | vera_sprite_height_8px ;  |
-    sta vera_data_0                                     ;  |
-                                                        ;  |
-    dex                                                 ;  |
-    bne -                                               ; /
+    lda #virus1_spid                        ; \
+    sta vera_data_0                         ;  |
+    lda #virus1_spid_def                    ;  |
+    sta vera_data_0                         ;  |
+    stz vera_data_0 ; pos x (low)           ;  |- init virus sprite
+    stz vera_data_0 ; pos x (high)          ;  |
+    stz vera_data_0 ; pos y (low)           ;  |
+    stz vera_data_0 ; pos y (high)          ;  |
+                                            ;  |
+    lda #vera_sprite_zdepth_behind_layer1   ;  |
+    sta vera_data_0                         ;  |
+    lda #virus1_spid_size                   ;  |
+    sta vera_data_0                         ; /
+
+    ldx #$7D
+-                                           ; \
+    lda #bullet_spid                        ;  |  
+    sta vera_data_0                         ;  |- init all sprites
+    lda #bullet_spid_def                    ;  |
+    sta vera_data_0 ; addr_mode             ;  |
+    stz vera_data_0 ; pos x (low)           ;  |- init bullet sprites
+    stz vera_data_0 ; pos x (high)          ;  |
+    stz vera_data_0 ; pos y (low)           ;  |
+    stz vera_data_0 ; pos y (high)          ;  |
+                                            ;  |
+    lda #vera_sprite_zdepth_behind_layer1   ;  |
+    sta vera_data_0                         ;  |
+    lda #bullet_spid_size                   ;  |
+    sta vera_data_0                         ;  |
+                                            ;  |
+    dex                                     ;  |
+    bne -                                   ; /
+
 
     ; prepare game
     +fn_irq_init kernal_irq, vsync_loop
@@ -550,6 +575,8 @@ irq_done:
 !byte CHOR_OP_SBG, t_square_id
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
+!byte CHOR_OP_SPS, $00, $FF
+!byte CHOR_OP_INS, id_mov_incr, $00
 !pet CHOR_OP_CHR, 4, 4, "l"
 !pet CHOR_OP_SLP, $08
 !pet CHOR_OP_CHR, 5, 4, "e"
@@ -613,9 +640,10 @@ irq_done:
 !byte CHOR_OP_LDA, $0B
 
 .lvl1_s2_lp:
-!byte CHOR_OP_INS, id_mov_incr, $02
-!byte CHOR_OP_INS, id_mov_incr, $12
-!byte CHOR_OP_INS, id_mov_dcic, $12
+!byte CHOR_OP_BIS, 3
+    !byte id_mov_incr, $02
+    !byte id_mov_incr, $12
+    !byte id_mov_dcic, $12
 !byte CHOR_OP_MPS, $10, $00
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $10
@@ -626,8 +654,9 @@ irq_done:
 !byte CHOR_OP_LDA, $18
 
 .lvl1_s3_lp:
-!byte CHOR_OP_INS, id_mov_incr, $12
-!byte CHOR_OP_INS, id_mov_incr, $22
+!byte CHOR_OP_BIS, 2
+    !byte id_mov_incr, $12
+    !byte id_mov_incr, $22
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_JAN, <.lvl1_s3_lp, >.lvl1_s3_lp
@@ -637,24 +666,27 @@ irq_done:
 !byte CHOR_OP_LDA, $08
 
 .lvl1_s4_lp:
-!byte CHOR_OP_INS, id_mov_dcic, $40
-!byte CHOR_OP_INS, id_mov_dcic, $31
-!byte CHOR_OP_INS, id_mov_dcic, $22
-!byte CHOR_OP_INS, id_mov_dcic, $13
-!byte CHOR_OP_INS, id_mov_dcic, $04
-!byte CHOR_OP_INS, id_mov_incr, $13
-!byte CHOR_OP_INS, id_mov_incr, $22
-!byte CHOR_OP_INS, id_mov_incr, $31
-!byte CHOR_OP_INS, id_mov_incr, $40
-!byte CHOR_OP_INS, id_mov_decr, $40
-!byte CHOR_OP_INS, id_mov_decr, $31
-!byte CHOR_OP_INS, id_mov_decr, $22
-!byte CHOR_OP_INS, id_mov_decr, $13
-!byte CHOR_OP_INS, id_mov_decr, $04
-!byte CHOR_OP_INS, id_mov_icdc, $13
-!byte CHOR_OP_INS, id_mov_icdc, $22
-!byte CHOR_OP_INS, id_mov_icdc, $31
-!byte CHOR_OP_INS, id_mov_icdc, $40
+!byte CHOR_OP_BIS, 6
+    !byte id_mov_dcic, $40
+    !byte id_mov_dcic, $31
+    !byte id_mov_dcic, $22
+    !byte id_mov_dcic, $13
+    !byte id_mov_dcic, $04
+    !byte id_mov_incr, $13
+!byte CHOR_OP_BIS, 6
+    !byte id_mov_incr, $22
+    !byte id_mov_incr, $31
+    !byte id_mov_incr, $40
+    !byte id_mov_decr, $40
+    !byte id_mov_decr, $31
+    !byte id_mov_decr, $22
+!byte CHOR_OP_BIS, 6
+    !byte id_mov_decr, $13
+    !byte id_mov_decr, $04
+    !byte id_mov_icdc, $13
+    !byte id_mov_icdc, $22
+    !byte id_mov_icdc, $31
+    !byte id_mov_icdc, $40
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $20
 !byte CHOR_OP_JAN, <.lvl1_s4_lp, >.lvl1_s4_lp
@@ -774,27 +806,33 @@ irq_done:
 !byte CHOR_OP_LDA, $02
 .lvl1_boss1_lp:
 !byte CHOR_OP_SPS, $08, $10
-!byte CHOR_OP_INS, id_mov_incr, $22
-!byte CHOR_OP_INS, id_mov_incr, $31
-!byte CHOR_OP_INS, id_mov_incr, $13
+!byte CHOR_OP_BIS, 3
+    !byte id_mov_incr, $22
+    !byte id_mov_incr, $31
+    !byte id_mov_incr, $13
 !byte CHOR_OP_SPS, $D9, $10
-!byte CHOR_OP_INS, id_mov_dcic, $22
-!byte CHOR_OP_INS, id_mov_dcic, $31
-!byte CHOR_OP_INS, id_mov_dcic, $13
+!byte CHOR_OP_BIS, 3
+    !byte id_mov_dcic, $22
+    !byte id_mov_dcic, $31
+    !byte id_mov_dcic, $13
 !byte CHOR_OP_SPS, $08, $60
-!byte CHOR_OP_INS, id_mov_incr, $22
-!byte CHOR_OP_INS, id_mov_icdc, $22
+!byte CHOR_OP_BIS, 2
+    !byte id_mov_incr, $22
+    !byte id_mov_icdc, $22
 !byte CHOR_OP_SPS, $D9, $60
-!byte CHOR_OP_INS, id_mov_dcic, $22
-!byte CHOR_OP_INS, id_mov_decr, $22
+!byte CHOR_OP_BIS, 2
+    !byte id_mov_dcic, $22
+    !byte id_mov_decr, $22
 !byte CHOR_OP_SPS, $08, $D0
-!byte CHOR_OP_INS, id_mov_icdc, $22
-!byte CHOR_OP_INS, id_mov_icdc, $31
-!byte CHOR_OP_INS, id_mov_icdc, $13
+!byte CHOR_OP_BIS, 3
+    !byte id_mov_icdc, $22
+    !byte id_mov_icdc, $31
+    !byte id_mov_icdc, $13
 !byte CHOR_OP_SPS, $D9, $D0
-!byte CHOR_OP_INS, id_mov_decr, $22
-!byte CHOR_OP_INS, id_mov_decr, $31
-!byte CHOR_OP_INS, id_mov_decr, $13
+!byte CHOR_OP_BIS, 3
+    !byte id_mov_decr, $22
+    !byte id_mov_decr, $31
+    !byte id_mov_decr, $13
 !byte CHOR_OP_LDB, $04
 !byte CHOR_OP_SPS, $00, $02
 .lvl1_boss1_lp2:

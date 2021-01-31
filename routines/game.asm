@@ -131,7 +131,8 @@ reset_objects:
     iny                     ;  |
     sta (r_obj_a),Y         ;  |
     iny                     ;  |
-    sta (r_obj_a),Y         ; /
+    lda #$FF                ;  | \_ pos_y = FF
+    sta (r_obj_a),Y         ; /  /
     clc                     ; \_ obj_addr += obj_size
     +adc16 r_obj_a, obj_size; /
     jmp -                   ; )- next
@@ -224,11 +225,32 @@ player_touched:             ;
 ; ###########################
 
 ; ###########################
+; a = spid
 change_player_sprite:
     pha
     +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite
     pla
     sta vera_data_0
+    rts
+; ###########################
+
+; ###########################
+; x = from
+; y = to
+; a = spid
+change_obj_sprite:
+    pha
+    +fn_vera_set_address $30 + vera_mem_sprite_bank, vera_mem_sprite
+    cpx #$00
+    beq .chg_obj_from
+-   lda vera_data_0
+    dex
+    bne -
+.chg_obj_from:
+    pla
+-   sta vera_data_0
+    dey
+    bne -
     rts
 ; ###########################
 
