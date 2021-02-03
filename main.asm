@@ -549,7 +549,7 @@ irq_done:
 !src "resources/sprites.asm"
 !src "resources/tiles.asm"
 
-*=choregraphy_start
+choregraphy_start:
 .lvl1_start:
 ; insert player
 !byte CHOR_OP_SBG, t_square_id
@@ -1083,10 +1083,10 @@ irq_done:
 !byte CHOR_OP_SLP, $FF
 !byte CHOR_OP_JMP, <.choregraphy_end, >.choregraphy_end
 
-*=obj_count
-!byte $00
+; *=obj_count
+; !byte $00
 
-*=obj_table
+; *=obj_table
 
-*=obj_fn_table
+obj_fn_table:
 !word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc, mov_lut_circle, mov_lut_big_circle, mov_rng

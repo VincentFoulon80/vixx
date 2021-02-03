@@ -235,7 +235,7 @@ reset_objects:
     sta r_obj_a             ;  |
     lda #>obj_table         ;  |- object lookup loop init
     sta r_obj_a+1           ;  |
-    ldy #$7F                ;  |
+    ldy #$80                ;  |
     sty obj_count           ;  |
     iny                     ;  |
     phy                     ; /

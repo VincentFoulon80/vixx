@@ -33,13 +33,9 @@ vram_sprites_base       = $8000
 
 
 ; ADDRESSES AND STUFF
-kernal_irq = $9EFE
+;choregraphy_start = $9000
 
-choregraphy_start = $9000
-
-obj_fn_table = $9E00
-obj_count =     $9BFF
-obj_table =     $9C00
+;obj_fn_table = $9E00
 obj_size =      $04
 obj_idx_type =  $00
 obj_idx_param = $01
@@ -67,11 +63,14 @@ GAME_MODE_GAMEOVER = $FF
 
 ; LOW USAGE VARIABLES
 ; $0400 to $07FF
-hiscore_87 = $0400
-hiscore_65 = $0401
-hiscore_43 = $0402
-hiscore_21 = $0403
-dynamic_string = $0500
+dynamic_string = $0400
+kernal_irq = $0500 ; 2 bytes
+hiscore_87 = $0502
+hiscore_65 = $0503
+hiscore_43 = $0504
+hiscore_21 = $0505
+obj_count =     $05FF
+obj_table =     $0600
 
 ; TEMPORARY VARIABLES
 ; $02 to $21
