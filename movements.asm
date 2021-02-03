@@ -281,6 +281,115 @@ mov_dec_inc:
 +   sta r_obj_y     ; /
     jmp mov_done    ; )- end of movement
 
+id_mov_circ = $07
+mov_lut_circle:
+    lda frame_count
+    and #$01
+    beq .mov_lut_circle_end
+    ldy r_obj_p
+    lda r_obj_x
+    clc
+    adc .lut_circle_lut,Y
+    sta r_obj_x
+    iny
+    lda r_obj_y
+    clc
+    adc .lut_circle_lut,Y
+    sta r_obj_y
+    iny
+    cpy #$20
+    bne +
+    ldy #$00
++   sty r_obj_p
+.mov_lut_circle_end
+    jmp mov_done
+
+.lut_circle_lut:
+!byte  6, 0
+!byte  4, 2
+!byte  4, 4
+!byte  2, 4
+!byte  0, 6
+!byte -2, 4
+!byte -4, 4
+!byte -4, 2
+!byte -6, 0
+!byte -4,-2
+!byte -4,-4
+!byte -2,-4
+!byte  0,-6
+!byte  2,-4
+!byte  4,-4
+!byte  4,-2
+
+id_mov_bcir = $08
+mov_lut_big_circle:
+    lda frame_count
+    and #$01
+    beq .mov_lut_big_circle_end
+    ldy r_obj_p
+    lda r_obj_x
+    clc
+    adc .lut_big_circle_lut,Y
+    sta r_obj_x
+    iny
+    lda r_obj_y
+    clc
+    adc .lut_big_circle_lut,Y
+    sta r_obj_y
+    iny
+    cpy #$40
+    bne +
+    ldy #$00
++   sty r_obj_p
+.mov_lut_big_circle_end
+    jmp mov_done
+
+.lut_big_circle_lut:
+!byte  6, 0
+!byte  5, 1
+!byte  4, 2
+!byte  3, 3
+!byte  4, 4
+!byte  3, 3
+!byte  2, 4
+!byte  1, 5
+!byte  0, 6
+!byte -1, 5
+!byte -2, 4
+!byte -3, 3
+!byte -4, 4
+!byte -3, 3
+!byte -4, 2
+!byte -5, 1
+!byte -6, 0
+!byte -5,-1
+!byte -4,-2
+!byte -3,-3
+!byte -4,-4
+!byte -3,-3
+!byte -2,-4
+!byte -1,-5
+!byte  0,-6
+!byte  1,-5
+!byte  2,-4
+!byte  3,-3
+!byte  4,-4
+!byte  3,-3
+!byte  4,-2
+!byte  5,-1
+
+
+id_mov_rng = $09
+mov_rng:
+    jsr rng
+    and #$55
+    sta r_obj_p
+    jsr rng
+    cmp #$00
+    bpl +
+    jmp mov_inc
++   jmp mov_dec
 
 mov_dbg:
     !byte $DB

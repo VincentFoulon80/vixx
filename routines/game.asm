@@ -8,6 +8,124 @@
 }
 
 ; ###########################
+save_score
+    lda score_87            ; \
+    sta hiscore_87          ;  |
+    lda score_65            ;  |- transfer score
+    sta hiscore_65          ;  |  to high score
+    lda score_43            ;  |
+    sta hiscore_43          ;  |
+    lda score_21            ;  |
+    sta hiscore_21          ; /
+    lda #HISCORE_FILE       ; \
+    ldx #IO_DEVICE          ;  |- prepare logical file
+    ldy #FILE_WRITE         ;  |
+    jsr SETLFS              ; /
+    lda #file_hiscore_len+2 ; \  )- size of filename
+    ldx #<file_hiscore_w    ;  | )- address of
+    ldy #>file_hiscore_w    ;  | )- file name
+    jsr SETNAM              ; /  )- set filename
+    jsr OPEN                ; )- open file
+    jsr check_disk_error    ; )- check file status
+    bcc +                   ; \
+    jsr CLRCHN              ;  |
+    lda #HISCORE_FILE       ;  |
+    jsr CLOSE               ;  |- if error we skip
+    jmp .save_score_end     ;  |
++                           ; /
+    ldx #HISCORE_FILE       ; \_ set file as current channel
+    jsr CHKOUT              ; /
+    lda score_87            ; \
+    jsr CHROUT              ;  |
+    jsr READST
+    lda score_65            ;  |- write score
+    jsr CHROUT              ;  |
+    lda score_43            ;  |
+    jsr CHROUT              ;  |
+    lda score_21            ;  |
+    jsr CHROUT              ; /
+    lda #HISCORE_FILE       ; \
+    jsr CLOSE               ;  |- close the file and reset channels
+    jsr CLRCHN              ; /
+.save_score_end
+    rts
+; ###########################
+
+; ###########################
+check_disk_error:
+    lda #IOCHECK_FILE       ; \
+    ldx #IO_DEVICE          ;  |- prepare logical file
+    ldy #IOCHECK            ;  |- with a special secondary address
+    jsr SETLFS              ; /
+    lda #0                  ; \
+    jsr SETNAM              ;  |- open a file with no name (=read status)
+    jsr OPEN                ; /
+    ldx #IOCHECK_FILE       ; \_ open channel for iocheck
+    jsr CHKIN               ; /
+    jsr CHRIN               ; \
+    tax                     ;  |- load the first two bytes
+    jsr CHRIN               ;  |  from the status string
+    tay                     ; /
+-   jsr CHRIN               ; \
+    cmp #PET_REGULAR_RTN    ;  |- load the rest of the string
+    bne -                   ; /
+    cpx #"0"                ; \
+    bne +                   ;  |- figure out if there was an error
+    cpy #"0"                ;  |  petscii "00" = OK
+    bne +                   ; /
+    jsr CLRCHN              ; \
+    lda #IOCHECK_FILE       ;  |- close the checking file
+    jsr CLOSE               ; /
+    clc                     ; \_ return carry cleared = good to go
+    rts                     ; /
++   jsr CLRCHN              ; \
+    lda #IOCHECK_FILE       ;  |- close the checking file
+    jsr CLOSE               ; /
+    sec                     ; \_ return carry set = an error occured
+    rts                     ; /
+; ###########################
+
+; ###########################
+load_score:
+    ; LOAD SCORE
+    lda #HISCORE_FILE       ; \
+    ldx #IO_DEVICE          ;  |- prepare logical file
+    ldy #FILE_READ          ;  |
+    jsr SETLFS              ; /
+    lda #file_hiscore_len   ; \  )- size of filename
+    ldx #<file_hiscore_r    ;  | )- address of
+    ldy #>file_hiscore_r    ;  | )- file name
+    jsr SETNAM              ; /  )- set filename
+    jsr OPEN                ; )- open file
+    jsr check_disk_error    ; )- check file status
+    bcc +                   ; \
+    stz hiscore_87          ;  |
+    stz hiscore_65          ;  |- if error we set a default value else we continue
+    stz hiscore_43          ;  |
+    stz hiscore_21          ;  |
+    lda #HISCORE_FILE       ;  |
+    jsr CLOSE               ;  |
+    jsr save_score          ;  |
+    jmp .load_score_end     ;  |
++                           ; /
+    ldx #HISCORE_FILE       ; \_ set file as current channel
+    jsr CHKIN               ; /
+    jsr GETIN               ; \_ get first byte
+    sta hiscore_87          ; /
+    jsr GETIN               ; \
+    sta hiscore_65          ;  |
+    jsr GETIN               ;  |- load the rest of the score
+    sta hiscore_43          ;  |
+    jsr GETIN               ;  |
+    sta hiscore_21          ; /
+    lda #HISCORE_FILE       ; \
+    jsr CLRCHN              ;  |- close the file and reset channels
+    jsr CLOSE               ; /
+.load_score_end:
+    rts
+; ###########################
+
+; ###########################
 init_game_screen:
     stz scroll_speed
     +fn_locate 0, 0, str_ui_full_row
@@ -45,6 +163,8 @@ init_game_screen:
 
 ; ###########################
 init_game:                  ;
+    stz invincibility_cnt   ;
+    stz score_over_time     ;
     lda #<choregraphy_start ;
     sta choregraphy_pc_l    ;
     lda #>choregraphy_start ;

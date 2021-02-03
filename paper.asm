@@ -47,10 +47,12 @@ obj_idx_pos_x = $02
 obj_idx_pos_y = $03
 
 ; CONSTANTS
-HISCORE_FILE   = $01
-HISCORE_DEVICE = $08
-FILE_WRITE = $03
-FILE_READ  = $03
+HISCORE_FILE    = $01
+IO_DEVICE       = $08
+IOCHECK_FILE    = $02
+FILE_WRITE  = $03
+FILE_READ   = $03
+IOCHECK     = 15
 
 WFRAME_MOVE = %00000001
 WFRAME_CHOR = %00000010
@@ -95,16 +97,17 @@ plyr_y   = $2D
 choregraphy_pc    = $30
 choregraphy_pc_l  = $30
 choregraphy_pc_h  = $31
-choregraphy_mode  = $32
-choregraphy_pos   = $33
-choregraphy_pos_l = $33
-choregraphy_pos_h = $34
-choregraphy_pos_x = $33
-choregraphy_pos_y = $34
-choregraphy_sleep = $35
-choregraphy_reg_a = $36
-choregraphy_reg_b = $37
+choregraphy_pos   = $32
+choregraphy_pos_l = $32
+choregraphy_pos_h = $33
+choregraphy_pos_x = $32
+choregraphy_pos_y = $33
+choregraphy_sleep = $34
+choregraphy_reg_a = $35
+choregraphy_reg_b = $36
+choregraphy_reg_c = $37
 
+score_over_time = $73
 scroll_speed = $74
 invincibility_cnt = $75
 lives = $76
@@ -153,6 +156,13 @@ game_mode = $7F
     lda #$84
     sta rng_seed_1
 
-    +fn_locate 2,2, str_press_enter
+    lda $9fbe       ;emulator detection
+	cmp #"1"
+	bne .emu_check_end
+	lda $9fbf
+	cmp #"6"
+	bne .emu_check_end
+    +fn_locate 0,2, str_emulator_msg
     jsr CHRIN
+.emu_check_end:
 }

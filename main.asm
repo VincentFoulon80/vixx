@@ -30,6 +30,8 @@ prg_boot:
 
     ; upload sprites
     +fn_vera_upload bullet, $10|bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty
+    +fn_vera_direct_upload bullet_glitch1, bullet_glitch1_packet_size, bullet_glitch1_packet_qty
+    +fn_vera_direct_upload bullet_glitch2, bullet_glitch2_packet_size, bullet_glitch2_packet_qty
     +fn_vera_direct_upload player, player_packet_size, player_packet_qty
     +fn_vera_direct_upload touched_player, touched_player_packet_size, touched_player_packet_qty
     +fn_vera_direct_upload virus1, virus1_packet_size, virus1_packet_qty
@@ -153,50 +155,24 @@ title_screen:
     lda hiscore_87
     bne .score_loaded
 
-.load_score:
-    ; LOAD SCORE
-    lda #HISCORE_FILE       ; \
-    ldx #HISCORE_DEVICE     ;  |- prepare logical file
-    ldy #FILE_READ          ;  |
-    jsr SETLFS              ; /
-    lda #file_hiscore_len   ; \  )- size of filename
-    ldx #<file_hiscore_r    ;  | )- address of
-    ldy #>file_hiscore_r    ;  | )- file name
-    jsr SETNAM              ; /  )- set filename
-    jsr OPEN                ; )- open file
-    bcc +                   ; \
--   stz hiscore_87          ;  |
-    stz hiscore_65          ;  |- if error we set a default value else we continue
-    stz hiscore_43          ;  |
-    stz hiscore_21          ;  |
-    lda #HISCORE_FILE       ;  |
-    jsr CLOSE               ;  |
-    jsr CLRCHN              ;  |
-    jmp .score_loaded       ;  |
-+                           ; /
-    ldx #HISCORE_FILE       ; \_ set file as current channel
-    jsr CHKIN               ; /
-    jsr GETIN               ; \_ get first byte
-    sta hiscore_87          ; /
-    jsr READST              ; \
-    AND #$40                ;  |- verify that the file exists
-    bne -                   ; /
-    jsr GETIN               ; \
-    sta hiscore_65          ;  |
-    jsr GETIN               ;  |- load the rest of the score
-    sta hiscore_43          ;  |
-    jsr GETIN               ;  |
-    sta hiscore_21          ; /
-    lda #HISCORE_FILE       ; \
-    jsr CLOSE               ;  |- close the file and reset channels
-    jsr CLRCHN              ; /
-
+    jsr load_score
 .score_loaded:
     lda #t_empty_id
     jsr fill_layer0
     jsr init_game_screen
     jsr refresh_hiscore
     jsr reset_objects
+    lda #$FF
+    sta r_obj_t
+    stz r_obj_p
+    stz r_obj_x
+    stz r_obj_y
+    jsr insert_object
+    lda #$6D
+    sta r_obj_x
+    lda #$50
+    sta r_obj_y
+    jsr insert_object
     jsr sleep_one_frame
     +fn_locate 2, 2, str_title_0
     +fn_locate 2, 3, str_title_1
@@ -204,20 +180,56 @@ title_screen:
     +fn_locate 2, 5, str_title_3
     +fn_locate 2, 6, str_title_4
 
-    +fn_locate 5, 8, str_title_5
-    +fn_locate 5, 9, str_title_6
-    +fn_locate 5, 10, str_title_7
-    +fn_locate 5, 11, str_title_8
-    +fn_locate 5, 12, str_title_9
+    ; +fn_locate 5, 8, str_title_5
+    ; +fn_locate 5, 9, str_title_6
+    ; +fn_locate 5, 10, str_title_7
+    ; +fn_locate 5, 11, str_title_8
+    ; +fn_locate 5, 12, str_title_9
 
     +fn_locate 9,16, str_press_start
 
     +fn_plot 48, 0
     
--   jsr rng
-    lda #0
+-   lda wait_frame
+    and #$01
+    bne +
+    jsr rng
+    and #$01
+    adc #$6D
+    sta obj_table+6
+    jsr rng
+    and #$01
+    adc #$50
+    sta obj_table+7
++   lda #0
     jsr joystick_get        ; fetch joy0
     and #joystick_mask_start
+    bne -
+
+    ; game started
+    +fn_locate 1,2, str_ui_game
+    +fn_locate 1,3, str_ui_game
+    +fn_locate 1,4, str_ui_game
+    +fn_locate 1,5, str_ui_game
+    +fn_locate 1,6, str_ui_game
+    +fn_locate 0,16, str_ui_game_row
+
+-   jsr sleep_one_frame
+    dec obj_table+7
+    beq +
+    dec obj_table+7
+    bne -
++
+    ldx #$04
+-   jsr sleep_one_frame
+    dec obj_table+7
+    dec obj_table+7
+    dex
+    bne -
+
+    ldx #$3C
+-   jsr sleep_one_frame
+    dex
     bne -
 
     lda #gamemode_game_init
@@ -250,45 +262,9 @@ game_over:
     bcc .save_score         ;  |
 +   jmp .gameover_sleep     ; /
 
-.save_score
-    lda score_87            ; \
-    sta hiscore_87          ;  |
-    lda score_65            ;  |- transfer score
-    sta hiscore_65          ;  |  to high score
-    lda score_43            ;  |
-    sta hiscore_43          ;  |
-    lda score_21            ;  |
-    sta hiscore_21          ; /
-    lda #HISCORE_FILE       ; \
-    ldx #HISCORE_DEVICE     ;  |- prepare logical file
-    ldy #FILE_WRITE         ;  |
-    jsr SETLFS              ; /
-    lda #file_hiscore_len+2 ; \  )- size of filename
-    ldx #<file_hiscore_w    ;  | )- address of
-    ldy #>file_hiscore_w    ;  | )- file name
-    jsr SETNAM              ; /  )- set filename
-    jsr OPEN                ; )- open file
-    bcc +                   ; \
-    lda #HISCORE_FILE       ;  |
-    jsr CLOSE               ;  |- if error we skip
-    jsr CLRCHN              ;  |
-    jmp .score_saved        ;  |
-+                           ; /
-    ldx #HISCORE_FILE       ; \_ set file as current channel
-    jsr CHKOUT              ; /
-    lda score_87            ; \
-    jsr CHROUT              ;  |
-    jsr READST
-    lda score_65            ;  |- write score
-    jsr CHROUT              ;  |
-    lda score_43            ;  |
-    jsr CHROUT              ;  |
-    lda score_21            ;  |
-    jsr CHROUT              ; /
-    lda #HISCORE_FILE       ; \
-    jsr CLOSE               ;  |- close the file and reset channels
-    jsr CLRCHN              ; /
-.score_saved
+.save_score:
+    jsr save_score
+
     ldx #$3C                ; \
 -   jsr sleep_one_frame     ;  |- wait 1 second
     dex                     ;  |
@@ -325,7 +301,7 @@ update_game:
     lda frame_count
     and #$0F
     bne +
-    lda #$01
+    lda score_over_time
     ldx #$00
     ldy #$00
     jsr add_to_score
@@ -483,6 +459,8 @@ backup_vera_addr:
     pha
     lda vera_low_addr
     pha
+    lda vera_stride_bank
+    pha
 
 draw_sprites:
     lda #%00010001          ; \_ set vera stride & bank values
@@ -546,6 +524,8 @@ autoscroll_done:
 
 restore_vera_addr:
     pla
+    sta vera_stride_bank
+    pla
     sta vera_low_addr
     pla
     sta vera_high_addr
@@ -608,6 +588,7 @@ irq_done:
 !pet CHOR_OP_CHR, 23, 5, "e"
 !pet CHOR_OP_SLP, $08
 !pet CHOR_OP_CHR, 24, 5, "m"
+!byte CHOR_OP_SOT, $01
 !byte CHOR_OP_SCR, $03
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $02
@@ -617,7 +598,7 @@ irq_done:
 !byte CHOR_OP_SCR, $04
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SLP, $3C
-
+;!byte CHOR_OP_JMP, <.lvl2_start, >.lvl2_start
 
 .lvl1_s1:
 !byte CHOR_OP_LDA, $06
@@ -797,14 +778,22 @@ irq_done:
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $00
 !byte CHOR_OP_SLP, $10
+!byte CHOR_OP_MOB, $01, $6D, $00
+!byte CHOR_OP_COB, $01, id_mov_incr, $01
 !pet CHOR_OP_PRD, 2,4, "       ", PET_NULL
 !byte CHOR_OP_SLP, $40
+!byte CHOR_OP_COB, $01, id_mov_incr, $00
 !pet CHOR_OP_PRD, 2,4, "warning", PET_NULL
 !byte CHOR_OP_SLP, $40
 !pet CHOR_OP_PRD, 2,4, "       ", PET_NULL
-
 !byte CHOR_OP_LDA, $02
+!byte CHOR_OP_LDC, $10
+
+!byte CHOR_OP_SLP, $20
+!byte CHOR_OP_COB, $01, id_mov_bcir, $00
+!byte CHOR_OP_SLP, $3C
 .lvl1_boss1_lp:
+!byte CHOR_OP_SPR, $03, $7C, bullet_glitch1_spid
 !byte CHOR_OP_SPS, $08, $10
 !byte CHOR_OP_BIS, 3
     !byte id_mov_incr, $22
@@ -836,11 +825,14 @@ irq_done:
 !byte CHOR_OP_LDB, $04
 !byte CHOR_OP_SPS, $00, $02
 .lvl1_boss1_lp2:
-!byte CHOR_OP_SLP, $06
+!byte CHOR_OP_SLP, $18
+!byte CHOR_OP_SPR, $03, $7C, bullet_glitch2_spid
 !byte CHOR_OP_SRX
 !byte CHOR_OP_DEA
 !byte CHOR_OP_DEB
-!byte CHOR_OP_JAN, <.lvl1_boss1_diag, >.lvl1_boss1_diag
+!byte CHOR_OP_JAZ, <.lvl1_boss1_diag, >.lvl1_boss1_diag
+!byte CHOR_OP_DEC
+!byte CHOR_OP_JCZ, <.lvl1_boss1_end, >.lvl1_boss1_end 
 !byte CHOR_OP_INS, id_mov_incr, $02
 !byte CHOR_OP_JBN, <.lvl1_boss1_lp2, >.lvl1_boss1_lp2
 !byte CHOR_OP_JMP, <.lvl1_boss1_lp, >.lvl1_boss1_lp
@@ -852,6 +844,104 @@ irq_done:
 !byte CHOR_OP_LDA, $02
 !byte CHOR_OP_JBN, <.lvl1_boss1_lp2, >.lvl1_boss1_lp2
 !byte CHOR_OP_JMP, <.lvl1_boss1_lp, >.lvl1_boss1_lp
+
+.lvl1_boss1_end:
+!byte CHOR_OP_SOT, $00
+!byte CHOR_OP_COB, $01, id_mov_incr, $02
+!byte CHOR_OP_SLP, $20
+!byte CHOR_OP_COB, $01, id_mov_rng, $00
+!byte CHOR_OP_SLP, $90
+!byte CHOR_OP_SPR, $02, $01, virus2_spid
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_COB, $01, id_mov_incr, $00
+!byte CHOR_OP_SLP, $3C
+!byte CHOR_OP_COB, $01, id_mov_decr, $02
+!byte CHOR_OP_SLP, $3C
+!pet CHOR_OP_PRD, 2,4,"level cleared!", PET_NULL
+!byte CHOR_OP_SLP, $3C
+!pet CHOR_OP_PRD, 2,5,"bonus: 1000 pts", PET_NULL
+!byte CHOR_OP_SCO, $00, $10, $00
+!byte CHOR_OP_SLP, $72
+!pet CHOR_OP_PRD, 2,7,"remaining: 80%", PET_NULL
+!byte CHOR_OP_SLP, $72
+
+!pet CHOR_OP_PRD, 2,4,"              ", PET_NULL
+!pet CHOR_OP_PRD, 2,5,"               ", PET_NULL
+!pet CHOR_OP_PRD, 2,7,"              ", PET_NULL
+
+; --- end of lvl1
+.lvl2_start:
+; insert player
+!byte CHOR_OP_SPR, $03, $7C, bullet_spid
+!byte CHOR_OP_SPS, $00, $FF
+!byte CHOR_OP_INS, id_mov_incr, $00
+!pet CHOR_OP_CHR, 4, 4, "l"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 5, 4, "e"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 6, 4, "v"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 7, 4, "e"
+!byte CHOR_OP_SBG, t_empty_id
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 8, 4, "l"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 10, 4, "2"
+!pet CHOR_OP_SLP, $10
+!pet CHOR_OP_CHR, 17, 5, "h"
+!pet CHOR_OP_SLP, $08
+!byte CHOR_OP_SBG, t_trace_id
+!pet CHOR_OP_CHR, 18, 5, "i"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 19, 5, "g"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 20, 5, "h"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 21, 5, " "
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 22, 5, "r"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 23, 5, "a"
+!pet CHOR_OP_SLP, $08
+!pet CHOR_OP_CHR, 24, 5, "m"
+!byte CHOR_OP_SOT, $01
+!byte CHOR_OP_SCR, $03
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SCR, $02
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SCR, $01
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SCR, $04
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $3C
+
+!byte CHOR_OP_LDA, $05
+!byte CHOR_OP_SPS, $08, $10
+.lvl2_s1:
+!byte CHOR_OP_LDB, $08
+!byte CHOR_OP_MPS, $20, $00
+.lvl2_s1_lp:
+!byte CHOR_OP_INS, id_mov_incr, $03
+!byte CHOR_OP_MPS, $00, $08
+!byte CHOR_OP_DEB
+!byte CHOR_OP_JBN, <.lvl2_s1_lp, >.lvl2_s1_lp
+!byte CHOR_OP_DEA
+!byte CHOR_OP_MPS, $00, $C0
+!byte CHOR_OP_JAN, <.lvl2_s1, >.lvl2_s1
+
+
+!byte CHOR_OP_SLP, $3C
+!pet CHOR_OP_PRD, 2,4, "         ", PET_NULL
+!pet CHOR_OP_PRD, 15,5,"          ", PET_NULL
+!byte CHOR_OP_SLP, $3C
+
+
+.lvl2_s2:
+!byte CHOR_OP_SPS, $00, $01
+!byte CHOR_OP_SRX
+!byte CHOR_OP_INS, id_mov_incr, $03
+!byte CHOR_OP_SLP, $18
+!byte CHOR_OP_JMP, <.lvl2_s2, >.lvl2_s2
 ; ;;
 ; .lvl1_s2:
 ; !byte CHOR_OP_SPS, $6F, $20
@@ -999,4 +1089,4 @@ irq_done:
 *=obj_table
 
 *=obj_fn_table
-!word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc;, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg, mov_dbg
+!word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc, mov_lut_circle, mov_lut_big_circle, mov_rng

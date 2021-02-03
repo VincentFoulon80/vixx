@@ -27,6 +27,45 @@ bullet  !byte $00,$00,$00,$00
 
 !set .sprite_addr = .sprite_addr + .sprite_size
 
+bullet_glitch1_packet_size  = .sprite_size
+bullet_glitch1_packet_qty   = $01
+bullet_glitch1_bank         = vram_sprites_base_b
+bullet_glitch1_address      = .sprite_addr
+bullet_glitch1_spid         = <(bullet_glitch1_address >> 5)
+bullet_glitch1_spid_size    = vera_sprite_width_8px | vera_sprite_height_8px
+bullet_glitch1_spid_def     = vera_sprite_mode_4bpp + (bullet_glitch1_bank << 3) + (bullet_glitch1_address >> 13)
+
+bullet_glitch1   !byte $00,$00,$00,$00
+                 !byte $0A,$A0,$00,$00
+                 !byte $00,$0A,$11,$A0
+                 !byte $0A,$11,$11,$A0
+                 !byte $A1,$11,$1A,$00
+                 !byte $00,$A1,$1A,$00
+                 !byte $00,$00,$00,$AA
+                 !byte $00,$00,$00,$00
+
+!set .sprite_addr = .sprite_addr + .sprite_size
+
+
+bullet_glitch2_packet_size  = .sprite_size
+bullet_glitch2_packet_qty   = $01
+bullet_glitch2_bank         = vram_sprites_base_b
+bullet_glitch2_address      = .sprite_addr
+bullet_glitch2_spid         = <(bullet_glitch2_address >> 5)
+bullet_glitch2_spid_size    = vera_sprite_width_8px | vera_sprite_height_8px
+bullet_glitch2_spid_def     = vera_sprite_mode_4bpp + (bullet_glitch2_bank << 3) + (bullet_glitch2_address >> 13)
+
+bullet_glitch2   !byte $0A,$00,$00,$00
+                 !byte $0A,$0A,$0A,$00
+                 !byte $00,$01,$A1,$00
+                 !byte $00,$01,$11,$00
+                 !byte $00,$A1,$1A,$A0
+                 !byte $00,$A1,$10,$A0
+                 !byte $00,$1A,$10,$00
+                 !byte $00,$A0,$A0,$00
+
+!set .sprite_addr = .sprite_addr + .sprite_size
+
 
 player_packet_size  = .sprite_size
 player_packet_qty   = $01
