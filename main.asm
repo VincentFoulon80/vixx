@@ -301,6 +301,8 @@ update_game:
     lda frame_count
     and #$0F
     bne +
+    lda invincibility_cnt
+    bne +
     lda score_over_time
     ldx #$00
     ldy #$00
@@ -852,6 +854,7 @@ choregraphy_start:
 !byte CHOR_OP_COB, $01, id_mov_rng, $00
 !byte CHOR_OP_SLP, $90
 !byte CHOR_OP_SPR, $02, $01, virus2_spid
+!byte CHOR_OP_LIF
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_COB, $01, id_mov_incr, $00
 !byte CHOR_OP_SLP, $3C

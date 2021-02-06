@@ -28,7 +28,6 @@ save_score
     jsr OPEN                ; )- open file
     jsr check_disk_error    ; )- check file status
     bcc +                   ; \
-    jsr CLRCHN              ;  |
     lda #HISCORE_FILE       ;  |
     jsr CLOSE               ;  |- if error we skip
     jmp .save_score_end     ;  |
@@ -37,17 +36,16 @@ save_score
     jsr CHKOUT              ; /
     lda score_87            ; \
     jsr CHROUT              ;  |
-    jsr READST
     lda score_65            ;  |- write score
     jsr CHROUT              ;  |
     lda score_43            ;  |
     jsr CHROUT              ;  |
     lda score_21            ;  |
     jsr CHROUT              ; /
-    lda #HISCORE_FILE       ; \
-    jsr CLOSE               ;  |- close the file and reset channels
-    jsr CLRCHN              ; /
-.save_score_end
+    jsr CLRCHN              ; \
+    lda #HISCORE_FILE       ;  |- close the file and reset channels
+    jsr CLOSE               ; /
+.save_score_end:
     rts
 ; ###########################
 
@@ -76,8 +74,7 @@ check_disk_error:
     jsr CLRCHN              ; \
     lda #IOCHECK_FILE       ;  |- close the checking file
     jsr CLOSE               ; /
-    clc                     ; \_ return carry cleared = good to go
-    rts                     ; /
+    rts                     ; )- return carry cleared = good to go
 +   jsr CLRCHN              ; \
     lda #IOCHECK_FILE       ;  |- close the checking file
     jsr CLOSE               ; /
@@ -118,8 +115,8 @@ load_score:
     sta hiscore_43          ;  |
     jsr GETIN               ;  |
     sta hiscore_21          ; /
-    lda #HISCORE_FILE       ; \
-    jsr CLRCHN              ;  |- close the file and reset channels
+    jsr CLRCHN              ; \
+    lda #HISCORE_FILE       ;  |- close the file and reset channels
     jsr CLOSE               ; /
 .load_score_end:
     rts

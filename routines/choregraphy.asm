@@ -34,6 +34,7 @@ CHOR_OP_COB = $A2 ; Configure OBject        ; obj_id, type, param
 
 CHOR_OP_SCO = $B0 ; SCOre points            ; XX0000,XX00,XX
 CHOR_OP_SOT = $B1 ; set Score Over Time     ; score
+CHOR_OP_LIF = $B2 ; Give a life             ; 
 
 CHOR_OP_JMP = $E0 ; JuMP to address         : addr_l, addr_h
 CHOR_OP_JAZ = $E1 ; Jump If regA is Zero    : addr_l, addr_h
@@ -322,6 +323,12 @@ run_choregraphy:
         sta score_over_time
     jmp .chor_end
 +
+    cmp #CHOR_OP_LIF
+    bne +
+        inc lives
+        jsr refresh_lives
+    jmp .chor_end
++
     cmp #CHOR_OP_JMP
     bne +
         jsr .chor_next_byte
@@ -456,11 +463,8 @@ run_choregraphy:
     rts
 ; ##########################
 .chor_next_byte:
-    phx
-    ldx #0
-    lda (choregraphy_pc,X)
+    lda (choregraphy_pc)
     +inc16 choregraphy_pc
-    plx
     eor #$00               ; )- this line will recall the cpu status flag
     rts
 ; ##########################
