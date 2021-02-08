@@ -2,22 +2,22 @@
 
 id_mov_null = $00
 mov_null:
-    jmp mov_done
+    jmp mov_done            ; )- do nothing
 
 id_mov_reset = $01
 mov_reset:
-    stz r_obj_x
-    lda #$FF
-    sta r_obj_y
-    stz r_obj_t
-    stz r_obj_p
-    jmp mov_done
+    stz r_obj_x             ; \
+    lda #$FF                ;  |
+    sta r_obj_y             ;  |- clean object properties
+    stz r_obj_t             ;  |  and make it mov_null
+    stz r_obj_p             ;  |
+    jmp mov_done            ; /
 
 id_mov_plyr = $02
 mov_player:
-    lda #0
-    jsr joystick_get        ; fetch joy0
-    tay                     ; store the value into y
+    lda #0                  ; \_ fetch joy0
+    jsr joystick_get        ; /
+    tay
     and #joystick_mask_left ; check left button
     bne +                   ; or skip
 
@@ -278,26 +278,26 @@ mov_dec_inc:
 
 id_mov_circ = $07
 mov_lut_circle:
-    lda frame_count
-    and #$01
-    beq .mov_lut_circle_end
-    ldy r_obj_p
-    lda r_obj_x
-    clc
-    adc .lut_circle_lut,Y
-    sta r_obj_x
-    iny
-    lda r_obj_y
-    clc
-    adc .lut_circle_lut,Y
-    sta r_obj_y
-    iny
-    cpy #$20
-    bne +
-    ldy #$00
-+   sty r_obj_p
-.mov_lut_circle_end
-    jmp mov_done
+    lda frame_count         ; \
+    and #$01                ;  |- move only on odd frames
+    beq .mov_lut_circle_end ; /
+    ldy r_obj_p             ; )- load step count
+    lda r_obj_x             ; \
+    clc                     ;  |- add X position
+    adc .lut_circle_lut,Y   ;  |  based on step
+    sta r_obj_x             ; /
+    iny                     ; )- increment step
+    lda r_obj_y             ; \
+    clc                     ;  |- add Y position
+    adc .lut_circle_lut,Y   ;  |  based on step
+    sta r_obj_y             ; /
+    iny                     ; )- increment step
+    cpy #$20                ; \
+    bne +                   ;  |- loop y after $20 steps
+    ldy #$00                ; /
++   sty r_obj_p             ; )- store step count
+.mov_lut_circle_end         ; \_ end of movement
+    jmp mov_done            ; /
 
 .lut_circle_lut:
 !byte  6, 0
@@ -319,26 +319,26 @@ mov_lut_circle:
 
 id_mov_bcir = $08
 mov_lut_big_circle:
-    lda frame_count
-    and #$01
-    beq .mov_lut_big_circle_end
-    ldy r_obj_p
-    lda r_obj_x
-    clc
-    adc .lut_big_circle_lut,Y
-    sta r_obj_x
-    iny
-    lda r_obj_y
-    clc
-    adc .lut_big_circle_lut,Y
-    sta r_obj_y
-    iny
-    cpy #$40
-    bne +
-    ldy #$00
-+   sty r_obj_p
-.mov_lut_big_circle_end
-    jmp mov_done
+    lda frame_count             ; \
+    and #$01                    ;  |- move only on odd frames
+    beq .mov_lut_big_circle_end ; /
+    ldy r_obj_p                 ; )- load step count
+    lda r_obj_x                 ; \
+    clc                         ;  |- add X position
+    adc .lut_big_circle_lut,Y   ;  |  based on step
+    sta r_obj_x                 ; /
+    iny                         ; )- increment step
+    lda r_obj_y                 ; \
+    clc                         ;  |- add Y position
+    adc .lut_big_circle_lut,Y   ;  |  based on step
+    sta r_obj_y                 ; /
+    iny                         ; )- increment step
+    cpy #$40                    ; \
+    bne +                       ;  |- loop y after $40 steps
+    ldy #$00                    ; /
++   sty r_obj_p                 ; )- store step count
+.mov_lut_big_circle_end         ; \_ end of movement
+    jmp mov_done                ; /
 
 .lut_big_circle_lut:
 !byte  6, 0
@@ -376,16 +376,22 @@ mov_lut_big_circle:
 
 
 id_mov_rng = $09
-mov_rng:
-    jsr rng
-    and #$55
-    sta r_obj_p
-    jsr rng
-    cmp #$00
-    bpl +
-    jmp mov_inc
-+   jmp mov_dec
+mov_rng:            
+    jsr rng         ; \ 
+    and #$55        ;  |- load param with a random value
+    sta r_obj_p     ; /
+    jsr rng         ; \
+    cmp #$00        ;  |- if rng() is negative
+    bpl +           ; /
+    jmp mov_inc     ; )- then do an increment movement
++   jmp mov_dec     ; )- else do a decrement movement
 
-mov_dbg:
-    !byte $DB
-    jmp mov_done
+mov_dbg:            ; \
+    !byte $DB       ;  |- invoke the debugger
+    jmp mov_done    ; /
+
+
+; function table for movements
+
+obj_fn_table:
+!word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc, mov_lut_circle, mov_lut_big_circle, mov_rng

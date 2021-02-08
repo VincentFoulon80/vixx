@@ -346,7 +346,7 @@ change_player_sprite:
 
 ; ###########################
 ; x = from
-; y = to
+; y = count
 ; a = spid
 change_obj_sprite:
     pha

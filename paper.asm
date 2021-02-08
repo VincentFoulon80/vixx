@@ -143,18 +143,20 @@ game_mode           = $7F
 
 !macro game_video_init {
 
-    lda #64
-    sta vera_vscale
-    lda #64
-    sta vera_hscale
+    lda #64         ; \
+    sta vera_vscale ;  |- set scale
+    lda #64         ;  |
+    sta vera_hscale ; /
 
+    ; configure layer 0
     +fn_vera_set_layer0_config vera_layer_config_map_width_32tiles | vera_layer_config_map_height_64tiles | vera_layer_config_color_depth_8bpp
     +fn_vera_set_layer0_tilebase $80 | vera_layer_tilebase_tile_width_8px | vera_layer_tilebase_tile_height_8px
     +fn_vera_set_layer0_mapbase (vram_layer0_mapbase_b << 7) | ((vram_layer0_mapbase >> 9) & %01111111)
 
+    ; set video mode
     +fn_vera_set_video vera_video_mask_sprite | vera_video_mask_layer0 | vera_video_mask_layer1 | vera_video_mask_output_vga
 
-
+    ; clear the text and background layers
     jsr clear_layer0
     jsr clear_layer1
     +fn_print str_white_on_black
@@ -181,24 +183,23 @@ game_mode           = $7F
 }
 
 !macro game_init {
-    stz game_mode
-    lda #$15
-    sta rng_seed_0
-    lda #$84
-    sta rng_seed_1
+    lda #$15        ; \
+    sta rng_seed_0  ;  |- rng initialization
+    lda #$84        ;  |
+    sta rng_seed_1  ; /
 
-    lda $9fbe       ;emulator detection
-	cmp #"1"
-	bne .emu_check_end
-	lda $9fbf
-	cmp #"6"
-	bne .emu_check_end
-    +fn_locate 0,2, str_emulator_msg
-    jsr CHRIN
+    lda $9fbe                       ; \
+	cmp #"1"                        ;  |
+	bne .emu_check_end              ;  |- detect emulator's magic number
+	lda $9fbf                       ;  |
+	cmp #"6"                        ;  |
+	bne .emu_check_end              ; /
+    +fn_locate 0,2, str_emulator_msg; \_ display a message for the emulator
+    jsr CHRIN                       ; /
 .emu_check_end:
 
     ; initializes sprites
-    +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite ; increment 1, bank 1, address FC00 + index*8
+    +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite
 
     lda #player_spid                        ; \
     sta vera_data_0                         ;  |
@@ -249,17 +250,17 @@ game_mode           = $7F
 
 
     ; prepare game
-    +fn_irq_init kernal_irq, vsync_loop
+    +fn_irq_init kernal_irq, vsync_loop ; initialize vsync loop
 
-    lda #gamemode_title
-    sta game_mode
+    lda #gamemode_title                 ; \_ set gamemode to titlescreen
+    sta game_mode                       ; /
 
-    lda #<proto
-    sta composer_pc_l
-    lda #>proto
-    sta composer_pc_h
-    lda #$3C
-    sta composer_rythm
-    lda #$3C
-    sta composer_delay
+    lda #<proto                         ; \
+    sta composer_pc_l                   ;  |- TEMPORARY PLACEMENT
+    lda #>proto                         ;  |  init music engine pc
+    sta composer_pc_h                   ; /
+    lda #$3C                            ; \
+    sta composer_rythm                  ;  |- TEMPORARY PLACEMENT
+    lda #$3C                            ;  |  init music engine vars
+    sta composer_delay                  ; /
 }

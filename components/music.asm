@@ -234,38 +234,37 @@ NOTE_B8 = $52DC
 
 
 
-    lda wait_frame
-    and #WFRAME_MUSIC
-    beq +
-    jmp music_end
-+   lda wait_frame
-    ora #WFRAME_MUSIC
-    sta wait_frame
+    lda wait_frame              ; \
+    and #WFRAME_MUSIC           ;  |- execute the following code
+    beq +                       ;  |  only once per frame
+    jmp music_end               ;  |
++   lda wait_frame              ;  |
+    ora #WFRAME_MUSIC           ;  |
+    sta wait_frame              ; /
 instrument_start:
-    ldy #$07
--
-    cpy psg_vo_cnt
-    beq processs_instrument_start
-    lda #$00
-    sta psg_vo_note,y
-    sta psg_vo_volumeHi,y
-    sta psg_vo_volumeLo,y
-    dey
-    bne +
-    jmp processs_instrument_end
-+   jmp -
+    ldy #$07                        ; \
+-                                   ;  |
+    cpy psg_vo_cnt                  ;  |- clear unused voices
+    beq processs_instrument_start   ;  |
+    lda #$00                        ;  |
+    sta psg_vo_note,y               ;  |
+    sta psg_vo_volumeHi,y           ;  |
+    sta psg_vo_volumeLo,y           ;  |
+    dey                             ;  |
+    bne +                           ;  |
+    jmp processs_instrument_end     ;  |
++   jmp -                           ; /
 processs_instrument_start:
     dey
 processs_instrument:
-    lda psg_vo_instr,y
-    asl
-    asl
-    asl
-    tax
+    lda psg_vo_instr,y              ; \
+    asl                             ;  |- get instrument index of the 
+    asl                             ;  |  current voice in X register
+    asl                             ;  |
+    tax                             ; /
     lda psg_vo_mode,y
     cmp #$01
     bne +
-        ;!byte $DB
         ; MODE 0 : UNINITIALIZED
         ; calculate attack delta and delay
         ; delay
@@ -277,7 +276,6 @@ processs_instrument:
         sta psg_vo_delay,y
         
         ; delta
-        ;!byte $DB
         stz dividend
         plx
         lda instrument_def + instr_idx_vol_max,x
@@ -303,7 +301,6 @@ processs_instrument:
     cmp #$02
     bne +
         ; MODE 1 : ATTACK
-        ;!byte $DB
         clc                     ; \
         lda psg_vo_volumeLo,y   ;  |
         adc psg_vo_deltaLo,y    ;  |- adc16 volume + delta
@@ -458,73 +455,73 @@ processs_instrument_end:
     jmp processs_instrument
 
 instrument_end:
-    dec composer_delay
-    beq +
-    jmp composer_end
-+
-    lda composer_rythm
-    sta composer_delay
+    dec composer_delay          ; \
+    beq +                       ;  |- handle rhythm
+    jmp composer_end            ;  |
++                               ;  |
+    lda composer_rythm          ;  |
+    sta composer_delay          ; /
 composer_start:
     ldy psg_vo_cnt
 -
     jsr .music_next_byte
     ; look for command
-    cmp #N_GNP
-    bne +
-        jmp composer_end
-    jmp composer_start
+    cmp #N_GNP                  ; \
+    bne +                       ;  |- GLOBAL NOP ()
+        jmp composer_end        ;  |  nop all voices at once
+    jmp composer_start          ; /
 +
-    cmp #N_INS
-    bne +
-        jsr .music_next_byte
-        tax
-        jsr .music_next_byte
-        sta psg_vo_instr,x
-    jmp composer_start
+    cmp #N_INS                  ; \
+    bne +                       ;  |- SET INSTRUMENT ( voice, instrument )
+        jsr .music_next_byte    ;  |
+        tax                     ;  |
+        jsr .music_next_byte    ;  |
+        sta psg_vo_instr,x      ;  |
+    jmp composer_start          ; /
 +
-    cmp #N_RTM
-    bne +
-        jsr .music_next_byte
-        sta composer_rythm
-        sta composer_delay
-    jmp composer_start
+    cmp #N_RTM                  ; \
+    bne +                       ;  |- SET RHYTHM ( frames_to_wait )
+        jsr .music_next_byte    ;  |
+        sta composer_rythm      ;  |
+        sta composer_delay      ;  |
+    jmp composer_start          ; /
 +
-    cmp #N_JMP
-    bne +
-        jsr .music_next_byte
-        tax
-        jsr .music_next_byte
-        stx composer_pc_l
-        sta composer_pc_h
-    jmp composer_start
+    cmp #N_JMP                  ; \
+    bne +                       ;  |- JUMP ( addr_l, addr_h )
+        jsr .music_next_byte    ;  |
+        tax                     ;  |
+        jsr .music_next_byte    ;  |
+        stx composer_pc_l       ;  |
+        sta composer_pc_h       ;  |
+    jmp composer_start          ; /
 +
-    cmp #N_JMS
-    bne +
-        jsr .music_next_byte
-        tax
-        jsr .music_next_byte
-        tay
-        lda composer_pc_l
-        sta composer_sr_l
-        lda composer_pc_h
-        sta composer_sr_h
-        stx composer_pc_l
-        sty composer_pc_h
-    jmp composer_start
+    cmp #N_JMS                  ; \
+    bne +                       ;  |- JUMP TO SECTION (addr_l, addr_h)
+        jsr .music_next_byte    ;  |
+        tax                     ;  |
+        jsr .music_next_byte    ;  |
+        tay                     ;  |
+        lda composer_pc_l       ;  |
+        sta composer_sr_l       ;  |
+        lda composer_pc_h       ;  |
+        sta composer_sr_h       ;  |
+        stx composer_pc_l       ;  |
+        sty composer_pc_h       ;  |
+    jmp composer_start          ; /
 +
-    cmp #N_RTS
-    bne +
-        lda composer_sr_l
-        sta composer_pc_l
-        lda composer_sr_h
-        sta composer_pc_h
-    jmp composer_start
+    cmp #N_RTS                  ; \
+    bne +                       ;  |- RETURN FROM SECTION ()
+        lda composer_sr_l       ;  |
+        sta composer_pc_l       ;  |
+        lda composer_sr_h       ;  |
+        sta composer_pc_h       ;  |
+    jmp composer_start          ; /
 +
-    cmp #N_VOI
-    bne +
-        jsr .music_next_byte
-        sta psg_vo_cnt
-    jmp composer_start
+    cmp #N_VOI                  ; \
+    bne +                       ;  |- SET VOICES ( count )
+        jsr .music_next_byte    ;  |
+        sta psg_vo_cnt          ;  |
+    jmp composer_start          ; /
 +
     ; check y > 0
     cpy #$00
@@ -534,16 +531,16 @@ composer_start:
 +   
     ldx #$00
 -   
-    cmp #$00            ; ignore NOPs
-    beq +
-    sta psg_vo_note,x
-    lda #$01
-    sta psg_vo_mode,x
+    cmp #$00                    ; \_ ignore NOPs
+    beq +                       ; /
+    sta psg_vo_note,x           ; \
+    lda #$01                    ;  |- set note and activate note
+    sta psg_vo_mode,x           ; /
 +   dey
-    beq composer_end
-    inx
-    jsr .music_next_byte
-    jmp -
+    beq composer_end            ; \
+    inx                         ;  |- continue to read the strem until
+    jsr .music_next_byte        ;  |  all voices has been processed
+    jmp -                       ; /
 
 composer_end:
     jmp music_end

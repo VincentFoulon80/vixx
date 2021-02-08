@@ -1,24 +1,24 @@
 !ifndef is_main !eof
 
 
-    lda wait_frame
-    and #WFRAME_MOVE
-    beq +
-    jmp update_collisions_end
-+   lda wait_frame
-    ora #WFRAME_MOVE
-    sta wait_frame
+    lda wait_frame          ; \
+    and #WFRAME_MOVE        ;  |
+    beq +                   ;  |- execute the following code
+    jmp update_collisions_end; |  only once per frame
++   lda wait_frame          ;  |
+    ora #WFRAME_MOVE        ;  |
+    sta wait_frame          ; /
 update_game:
-    lda frame_count
-    and #$0F
-    bne +
-    lda invincibility_cnt
-    bne +
-    lda score_over_time
-    ldx #$00
-    ldy #$00
-    jsr add_to_score
-+   jsr optimize_object_count
+    lda frame_count         ; \
+    and #$0F                ;  |
+    bne +                   ;  |- add up score over time
+    lda invincibility_cnt   ;  |  only when not in invincibility
+    bne +                   ;  |  state and on certain
+    lda score_over_time     ;  |  frame counts
+    ldx #$00                ;  |
+    ldy #$00                ;  |
+    jsr add_to_score        ; /
++   jsr optimize_object_count;)- avoid looking up every possible objects
     lda #<obj_table         ; \
     sta r_obj_a             ;  |
     lda #>obj_table         ;  |- object lookup loop init
@@ -101,8 +101,8 @@ update_collisions:
     jmp -
 
 .game_gameover:
-    lda #gamemode_gameover  
-    sta game_mode           
-    jmp change_gamemode     
+    lda #gamemode_gameover  ; \
+    sta game_mode           ;  |- set gamemode to GAMEOVER
+    jmp change_gamemode     ; /
 
 update_collisions_end:
