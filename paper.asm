@@ -121,15 +121,6 @@ frame_count = $7E
 game_mode = $7F
 
 !macro game_video_init {
-;    .layer0_mapbase = ((vram_layer0_mapbase_b <<< 16) + vram_layer0_mapbase) >>> 9
-;    .layer0_tilebase = (vram_layer0_tilebase_b <<< 16) >>> 9
-
-    ; setup map layer
-;    +fn_vera_set_layer0_config vera_layer_config_map_width_32tiles | vera_layer_config_map_height_32tiles | vera_layer_config_color_depth_4bpp
-;    +fn_vera_set_layer0_tilebase .layer0_tilebase | vera_layer_tilebase_tile_height_16px | vera_layer_tilebase_tile_width_16px
-;    +fn_vera_set_layer0_mapbase .layer0_mapbase
-    ; setup text layer
-;    +fn_vera_set_layer1_config vera_layer_config_map_width_32tiles | vera_layer_config_map_height_32tiles | vera_layer_config_color_depth_1bpp
 
     lda #64
     sta vera_vscale
@@ -146,6 +137,26 @@ game_mode = $7F
     jsr clear_layer0
     jsr clear_layer1
     +fn_print str_white_on_black
+
+    ; upload tiles
+    +fn_vera_upload t_empty, $10|t_empty_bank, t_empty_address, t_empty_packet_size, t_empty_packet_qty
+    +fn_vera_direct_upload t_square, t_square_packet_size, t_square_packet_qty
+    +fn_vera_direct_upload t_trace, t_trace_packet_size, t_trace_packet_qty
+    +fn_vera_direct_upload t_scanl, t_scanl_packet_size, t_scanl_packet_qty
+
+
+    ; upload sprites
+    +fn_vera_upload bullet, $10|bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty
+    +fn_vera_direct_upload bullet_glitch1, bullet_glitch1_packet_size, bullet_glitch1_packet_qty
+    +fn_vera_direct_upload bullet_glitch2, bullet_glitch2_packet_size, bullet_glitch2_packet_qty
+    +fn_vera_direct_upload player, player_packet_size, player_packet_qty
+    +fn_vera_direct_upload touched_player, touched_player_packet_size, touched_player_packet_qty
+    +fn_vera_direct_upload virus1, virus1_packet_size, virus1_packet_qty
+    +fn_vera_direct_upload virus2, virus2_packet_size, virus2_packet_qty
+    +fn_vera_direct_upload virus3, virus3_packet_size, virus3_packet_qty
+    +fn_vera_direct_upload virus4, virus4_packet_size, virus4_packet_qty
+    +fn_vera_direct_upload virus5, virus5_packet_size, virus5_packet_qty
+    +fn_vera_direct_upload virus6, virus6_packet_size, virus6_packet_qty
 }
 
 !macro game_init {
@@ -164,4 +175,61 @@ game_mode = $7F
     +fn_locate 0,2, str_emulator_msg
     jsr CHRIN
 .emu_check_end:
+
+    ; initializes sprites
+    +fn_vera_set_address $10 + vera_mem_sprite_bank, vera_mem_sprite ; increment 1, bank 1, address FC00 + index*8
+
+    lda #player_spid                        ; \
+    sta vera_data_0                         ;  |
+    lda #player_spid_def                    ;  |
+    sta vera_data_0                         ;  |
+    stz vera_data_0 ; pos x (low)           ;  |- init player sprite
+    stz vera_data_0 ; pos x (high)          ;  |
+    stz vera_data_0 ; pos y (low)           ;  |
+    stz vera_data_0 ; pos y (high)          ;  |
+                                            ;  |
+    lda #vera_sprite_zdepth_behind_layer1   ;  |
+    sta vera_data_0                         ;  |
+    lda #player_spid_size                   ;  |
+    sta vera_data_0                         ; /
+
+    lda #virus1_spid                        ; \
+    sta vera_data_0                         ;  |
+    lda #virus1_spid_def                    ;  |
+    sta vera_data_0                         ;  |
+    stz vera_data_0 ; pos x (low)           ;  |- init virus sprite
+    stz vera_data_0 ; pos x (high)          ;  |
+    stz vera_data_0 ; pos y (low)           ;  |
+    stz vera_data_0 ; pos y (high)          ;  |
+                                            ;  |
+    lda #vera_sprite_zdepth_behind_layer1   ;  |
+    sta vera_data_0                         ;  |
+    lda #virus1_spid_size                   ;  |
+    sta vera_data_0                         ; /
+
+    ldx #$7D
+-                                           ; \
+    lda #bullet_spid                        ;  |  
+    sta vera_data_0                         ;  |- init all sprites
+    lda #bullet_spid_def                    ;  |
+    sta vera_data_0 ; addr_mode             ;  |
+    stz vera_data_0 ; pos x (low)           ;  |- init bullet sprites
+    stz vera_data_0 ; pos x (high)          ;  |
+    stz vera_data_0 ; pos y (low)           ;  |
+    stz vera_data_0 ; pos y (high)          ;  |
+                                            ;  |
+    lda #vera_sprite_zdepth_behind_layer1   ;  |
+    sta vera_data_0                         ;  |
+    lda #bullet_spid_size                   ;  |
+    sta vera_data_0                         ;  |
+                                            ;  |
+    dex                                     ;  |
+    bne -                                   ; /
+
+
+    ; prepare game
+    +fn_irq_init kernal_irq, vsync_loop
+
+    lda #gamemode_title
+    sta game_mode
 }
