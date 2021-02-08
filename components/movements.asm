@@ -1,9 +1,4 @@
-!ifndef is_main {
-    !src "../lib/x16.asm"
-    !src "paper.asm"
-    *= $801
-mov_done:
-}
+!ifndef is_main !eof
 
 id_mov_null = $00
 mov_null:

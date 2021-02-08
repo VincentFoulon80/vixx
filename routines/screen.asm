@@ -1,11 +1,4 @@
-!ifndef is_main {
-    is_main = 1
-    !src "../../lib/x16.asm"
-    !src "../../lib/vera.asm"
-    !src "../../lib/math.asm"
-    !src "../paper.asm"
-    *= $801
-}
+!ifndef is_main !eof
 
 
 ; =======================================================================================================

@@ -1,7 +1,4 @@
-!ifndef is_main {
-    !src "../../lib/x16.asm"
-    *= $801
-}
+!ifndef is_main !eof
 
 SWP = PET_COLOR_SWAP
 

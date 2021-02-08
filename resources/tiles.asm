@@ -1,8 +1,5 @@
-!ifndef is_main {
-    !src "../../lib/vera.asm"
-    !src "../paper.asm"
-    *= $801
-}
+!ifndef is_main !eof
+
 !set .tile_id   = $00
 !set .tile_addr = vram_layer0_tilebase
 !set .tile_size = $40
