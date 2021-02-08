@@ -238,7 +238,7 @@ gamemode_game_init = $01
 gamemode_game = $02
 game_loop:
 !src "components/objects.asm"
-
+!src "components/music.asm"
 !src "components/choregraphy.asm"
 
     jmp game_loop
@@ -367,6 +367,32 @@ autoscroll:
     sta vera_layer0_vscroll_L   ; /
 autoscroll_done:
 
+psg_upload:
+    ldy #$00
+    +fn_vera_set_address $10|vera_mem_psg_bank, vera_mem_psg
+-   
+    ldx psg_vo_note,y
+    lda note_l,x
+    sta vera_data_0
+    lda note_h,x
+    sta vera_data_0
+
+    lda psg_vo_instr,y
+    asl
+    asl
+    asl
+    tax
+    lda instrument_def + instr_idx_direction,x
+    ora psg_vo_volumeHi,y
+    sta vera_data_0
+    lda instrument_def + instr_idx_waveform,x
+    ora #$3F
+    sta vera_data_0
+    iny
+    cpy #$08
+    bne -
+psg_upload_end:
+
 restore_vera_addr:
     pla
     sta vera_stride_bank
@@ -394,9 +420,12 @@ irq_done:
 !src "resources/sprites.asm"
 !src "resources/tiles.asm"
 
+!src "resources/musics/sos.asm"
+!src "resources/musics/proto1.asm"
+
 choregraphy_start:
-!src "resources/level-1.asm"
-!src "resources/level-2.asm"
+!src "resources/levels/1-filesystem.asm"
+!src "resources/levels/2-high-ram.asm"
 
 
 .choregraphy_end:

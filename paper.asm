@@ -52,25 +52,33 @@ IOCHECK     = 15
 
 WFRAME_MOVE = %00000001
 WFRAME_CHOR = %00000010
+WFRAME_MUSIC= %00000100
 
 GRAZE_BONUS = $01
 INVINCIBILITY_FRAMES = $3C
 GAMEOVER_WAIT_S = $03
 
-GAME_MODE_TITLE = $00
-GAME_MODE_GAME = $01
-GAME_MODE_GAMEOVER = $FF
-
 ; LOW USAGE VARIABLES
 ; $0400 to $07FF
-dynamic_string = $0400
-kernal_irq = $0500 ; 2 bytes
-hiscore_87 = $0502
-hiscore_65 = $0503
-hiscore_43 = $0504
-hiscore_21 = $0505
-obj_count =     $05FF
-obj_table =     $0600
+dynamic_string = $0400  ; 0~256 bytes
+kernal_irq = $0500      ; 2 bytes
+hiscore_87 = $0502      ; 1 byte
+hiscore_65 = $0503      ; 1 byte
+hiscore_43 = $0504      ; 1 byte
+hiscore_21 = $0505      ; 1 byte
+
+psg_vo_cnt   = $050F    ; 1 byte
+psg_vo_note  = $0510    ; 8 bytes
+psg_vo_instr = $0518    ; 8 bytes
+psg_vo_delay = $0520    ; 8 bytes
+psg_vo_mode = $0528     ; 8 bytes
+psg_vo_deltaLo = $0530  ; 8 bytes
+psg_vo_deltaHi = $0538  ; 8 bytes
+psg_vo_volumeLo = $0540 ; 8 bytes
+psg_vo_volumeHi = $0548 ; 8 bytes
+
+obj_count =     $05FF   ; 1 byte
+obj_table =     $0600   ; 512 bytes
 
 ; TEMPORARY VARIABLES
 ; $02 to $21
@@ -106,19 +114,32 @@ choregraphy_reg_a = $35
 choregraphy_reg_b = $36
 choregraphy_reg_c = $37
 
-score_over_time = $73
-scroll_speed = $74
-invincibility_cnt = $75
-lives = $76
-score_87 = $77
-score_65 = $78
-score_43 = $79
-score_21 = $7A
-rng_seed_0 = $7B
-rng_seed_1 = $7C
-wait_frame = $7D
-frame_count = $7E
-game_mode = $7F
+composer_pc     = $40
+composer_pc_l   = $40
+composer_pc_h   = $41
+composer_delay  = $42
+composer_rythm  = $43
+composer_sr     = $44
+composer_sr_l   = $44
+composer_sr_h   = $45
+dividend        = $46
+divisor         = $47
+remainder       = $48
+result          = dividend
+
+score_over_time     = $73
+scroll_speed        = $74
+invincibility_cnt   = $75
+lives               = $76
+score_87            = $77
+score_65            = $78
+score_43            = $79
+score_21            = $7A
+rng_seed_0          = $7B
+rng_seed_1          = $7C
+wait_frame          = $7D
+frame_count         = $7E
+game_mode           = $7F
 
 !macro game_video_init {
 
@@ -232,4 +253,13 @@ game_mode = $7F
 
     lda #gamemode_title
     sta game_mode
+
+    lda #<proto
+    sta composer_pc_l
+    lda #>proto
+    sta composer_pc_h
+    lda #$3C
+    sta composer_rythm
+    lda #$3C
+    sta composer_delay
 }

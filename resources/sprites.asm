@@ -1,8 +1,4 @@
-!ifndef is_main {
-    !src "../../lib/vera.asm"
-    !src "../paper.asm"
-    *= $801
-}
+!ifndef is_main !eof
 
 !set .sprite_addr = vram_sprites_base
 !set .sprite_size = $20
