@@ -1,4 +1,5 @@
 [![devlog](https://img.shields.io/badge/-devlog-informational)](https://www.commanderx16.com/forum/index.php?/topic/974-devlog-vixx-bullet-hell-game/)
+[![download on CX16 forum](https://img.shields.io/badge/download-CX16%20forum-success)](https://www.commanderx16.com/forum/index.php?/files/file/135-vixx/)
 
 # Vixx
 
