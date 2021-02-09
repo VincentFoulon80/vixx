@@ -243,7 +243,7 @@
 !byte CHOR_OP_COB, $01, id_mov_bcir, $00
 !byte CHOR_OP_SLP, $3C
 .lvl1_boss1_lp:
-!byte CHOR_OP_SPR, $03, $7C, bullet_glitch1_spid
+!byte CHOR_OP_SPR, $02, $7D, bullet_glitch1_spid
 !byte CHOR_OP_SPS, $08, $10
 !byte CHOR_OP_BIS, 3
     !byte id_mov_incr, $22
@@ -276,7 +276,7 @@
 !byte CHOR_OP_SPS, $00, $02
 .lvl1_boss1_lp2:
 !byte CHOR_OP_SLP, $18
-!byte CHOR_OP_SPR, $03, $7C, bullet_glitch2_spid
+!byte CHOR_OP_SPR, $02, $7D, bullet_glitch2_spid
 !byte CHOR_OP_SRX
 !byte CHOR_OP_DEA
 !byte CHOR_OP_DEB

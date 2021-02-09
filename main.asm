@@ -306,8 +306,8 @@ throw_panic:
     stz global_volume               ; /
     dec panics                      ; \_ update panics counter
     jsr refresh_panics              ; /
-    ldx #$03                        ; \
-    ldy #$7C                        ;  |- change bullet sprite
+    ldx #$02                        ; \
+    ldy #$7D                        ;  |- change bullet sprite
     lda #bullet_panic_spid          ;  |
     jsr change_obj_sprite           ; /
     lda #$00                        ; \
@@ -335,8 +335,9 @@ throw_panic:
     dex                             ;  |
     cpx #$FF                        ;  |
     bne -                           ; /
-    ldx #$03                        ; \
-    ldy #$7C                        ;  |- restore bullet sprite
+    jsr sleep_one_frame
+    ldx #$02                        ; \
+    ldy #$7D                        ;  |- restore bullet sprite
     lda #bullet_spid                ;  |
     jsr change_obj_sprite           ; /
     pla                             ; \_ restore global volume

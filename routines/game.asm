@@ -233,7 +233,7 @@ reset_objects:
     sta r_obj_a             ;  |
     lda #>obj_table         ;  |- object lookup loop init
     sta r_obj_a+1           ;  |
-    ldy #$80                ;  |
+    ldy #$7F                ;  |
     sty obj_count           ;  |
     iny                     ;  |
     phy                     ; /
@@ -242,8 +242,9 @@ reset_objects:
     dey                     ;  |- for y=0 to obj_count
     beq +                   ;  |
     phy                     ; /
-    lda #$00
+    lda #$01
     sta (r_obj_a)           ; \
+    lda #$00                ;  |
     ldy #obj_idx_param      ;  |
     sta (r_obj_a),Y         ;  |- hard reset everything
     iny                     ;  |
@@ -358,7 +359,7 @@ change_player_sprite:
 ; a = spid
 change_obj_sprite:
     pha
-    +fn_vera_set_address $30 + vera_mem_sprite_bank, vera_mem_sprite
+    +fn_vera_set_address $40 + vera_mem_sprite_bank, vera_mem_sprite
     cpx #$00
     beq .chg_obj_from
 -   lda vera_data_0
