@@ -525,7 +525,6 @@ irq_done:                       ;  |  and hand over to the kernal's IRQ handler
 !src "resources/sprites.asm"
 !src "resources/tiles.asm"
 
-!src "resources/musics/sos.asm"
 !src "resources/musics/proto1.asm"
 
 choregraphy_start:
