@@ -254,8 +254,11 @@ game_paused:
     lda scroll_speed                ; \
     pha                             ;  |- backup & clear scrolling speed
     stz scroll_speed                ; /
--   jsr sleep_one_frame
-    lda #0                          ; \
+    lda global_volume               ; \
+    pha                             ;  |- backup & clear global volume
+    stz global_volume               ; /
+-   jsr sleep_one_frame             ; \
+    lda #0                          ;  |
     jsr joystick_get                ;  |- check release start button
     and #joystick_mask_start        ;  |
     beq -                           ; /
@@ -271,12 +274,14 @@ game_paused:
     jsr joystick_get                ;  |- check for start button
     and #joystick_mask_start        ;  |
     bne -                           ; /
--   jsr sleep_one_frame
-    lda #0                          ; \
+-   jsr sleep_one_frame             ; \
+    lda #0                          ;  |
     jsr joystick_get                ;  |- check release start button
     and #joystick_mask_start        ;  |
     beq -                           ; /
     +fn_locate 31,27, str_paused_clr; )- remove "paused" text
+    pla                             ; \_ restore global volume
+    sta global_volume               ; /
     pla                             ; \_ restore the scrolling speed
     sta scroll_speed                ; /
     jmp game_loop
@@ -421,10 +426,11 @@ psg_upload:
     asl                         ;  |
     asl                         ;  |
     tax                         ; /
-    lda instrument_def + instr_idx_direction,x  ; \
-    ora psg_vo_volumeHi,y                       ;  |- set instrument waveform
-    sta vera_data_0                             ;  |  volume and direction
-    lda instrument_def + instr_idx_waveform,x   ;  |  based on instrument table
+    lda psg_vo_volumeHi,y                       ; \
+    and global_volume                           ;  |- set instrument waveform
+    ora instrument_def + instr_idx_direction,x  ;  |  volume and direction
+    sta vera_data_0                             ;  |  based on instrument table
+    lda instrument_def + instr_idx_waveform,x   ;  |
     ora #$3F                                    ;  |
     sta vera_data_0                             ; /
     iny                         ; \
