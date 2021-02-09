@@ -120,17 +120,17 @@ init_game_screen:
     stz scroll_speed
     +fn_locate 0, 0, str_ui_full_row
     +fn_print str_ui_game_row
-    +fn_print str_ui_hiscore_lbl_row
+    +fn_print str_ui_empty_slot_row
     +fn_print str_ui_empty_slot_row
     +fn_print str_ui_game_row
-    +fn_print str_ui_score_lbl_row
+    +fn_print str_ui_empty_slot_row
     +fn_print str_ui_empty_slot_row
     +fn_print str_ui_game_row
-    +fn_print str_ui_lives_lbl_row
+    +fn_print str_ui_empty_slot_row
     +fn_print str_ui_empty_slot_row
     +fn_print str_ui_game_row
-    +fn_print str_ui_game_row
-    +fn_print str_ui_game_row
+    +fn_print str_ui_empty_slot_row
+    +fn_print str_ui_empty_slot_row
     +fn_print str_ui_game_row
     +fn_print str_ui_game_row
     +fn_print str_ui_game_row
@@ -148,6 +148,11 @@ init_game_screen:
     +fn_print str_ui_game_row
     +fn_print str_ui_game_row
     +fn_print str_ui_full_row
+
+    +fn_locate 29,2, str_ui_hiscore_lbl
+    +fn_locate 29,5, str_ui_score_lbl
+    +fn_locate 29,8, str_ui_lives_lbl
+    +fn_locate 29,11, str_ui_panics_lbl
     rts
 ; ###########################
 
@@ -161,6 +166,8 @@ init_game:                  ;
     sta choregraphy_pc_h    ;
     lda #$05                ;
     sta lives               ;
+    lda #$03                ;
+    sta panics              ;
     stz score_87            ;
     stz score_65            ;
     stz score_43            ;
@@ -169,6 +176,7 @@ init_game:                  ;
     jsr refresh_hiscore     ;
     jsr refresh_score       ;
     jsr refresh_lives       ;
+    jsr refresh_panics      ;
     rts                     ;
 ; ###########################
 
@@ -532,6 +540,23 @@ refresh_lives:
     dex
     beq +
     jsr CHROUT
+    jmp -
++   rts
+; ###########################
+
+; ###########################
+refresh_panics:
+    +fn_locate 29, 12, str_ui_empty_slot
+    +fn_plot 30,12
+    lda #PET_COLOR_LRED
+    jsr CHROUT
+    lda chr_panic
+    ldx panics
+    beq +
+-
+    jsr CHROUT
+    dex
+    beq +
     jmp -
 +   rts
 ; ###########################

@@ -1,6 +1,11 @@
 !ifndef is_main !eof
 
 proto:
+    ; blank loop, put the interpreter to sleep
+    !byte N_RTM, 255
+    !byte N_GNP
+    !byte N_JMP, <proto, >proto
+
     !byte N_RTM, 15
     !byte N_INS, 0, 5
     !byte N_INS, 1, 4

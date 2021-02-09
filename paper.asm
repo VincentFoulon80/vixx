@@ -128,9 +128,10 @@ remainder       = $48
 result          = dividend
 global_volume   = $4F
 
-score_over_time     = $73
-scroll_speed        = $74
-invincibility_cnt   = $75
+score_over_time     = $72
+scroll_speed        = $73
+invincibility_cnt   = $74
+panics              = $75
 lives               = $76
 score_87            = $77
 score_65            = $78
@@ -171,6 +172,7 @@ game_mode           = $7F
 
     ; upload sprites
     +fn_vera_upload bullet, $10|bullet_bank, bullet_address, bullet_packet_size, bullet_packet_qty
+    +fn_vera_direct_upload bullet_panic, bullet_panic_packet_size, bullet_panic_packet_qty
     +fn_vera_direct_upload bullet_glitch1, bullet_glitch1_packet_size, bullet_glitch1_packet_qty
     +fn_vera_direct_upload bullet_glitch2, bullet_glitch2_packet_size, bullet_glitch2_packet_qty
     +fn_vera_direct_upload player, player_packet_size, player_packet_qty

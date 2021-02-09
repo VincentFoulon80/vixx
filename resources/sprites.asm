@@ -23,6 +23,25 @@ bullet  !byte $00,$00,$00,$00
 
 !set .sprite_addr = .sprite_addr + .sprite_size
 
+bullet_panic_packet_size  = .sprite_size
+bullet_panic_packet_qty   = $01
+bullet_panic_bank         = vram_sprites_base_b
+bullet_panic_address      = .sprite_addr
+bullet_panic_spid         = <(bullet_panic_address >> 5)
+bullet_panic_spid_size    = vera_sprite_width_8px | vera_sprite_height_8px
+bullet_panic_spid_def     = vera_sprite_mode_4bpp + (bullet_panic_bank << 3) + (bullet_panic_address >> 13)
+
+bullet_panic    !byte $0A,$00,$00,$A0
+                !byte $00,$00,$00,$00
+                !byte $A0,$00,$A0,$00
+                !byte $00,$00,$00,$00
+                !byte $00,$A0,$00,$00
+                !byte $00,$00,$00,$A0
+                !byte $A0,$00,$00,$00
+                !byte $00,$00,$A0,$00
+
+!set .sprite_addr = .sprite_addr + .sprite_size
+
 bullet_glitch1_packet_size  = .sprite_size
 bullet_glitch1_packet_qty   = $01
 bullet_glitch1_bank         = vram_sprites_base_b

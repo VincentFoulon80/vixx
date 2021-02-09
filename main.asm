@@ -243,12 +243,22 @@ game_loop:
     bne +                           ; /
     jmp game_paused
 +
+    lda #0                          ; \
+    jsr joystick_get                ;  |- check for B button
+    and #joystick_mask_B            ;  |
+    bne +                           ; /
+    lda panics                      ; \_ check if can panic
+    beq +                           ; /
+    jmp throw_panic
++
 
 !src "components/objects.asm"
 !src "components/music.asm"
 !src "components/choregraphy.asm"
 
     jmp game_loop
+
+
 
 game_paused:
     lda scroll_speed                ; \
@@ -280,6 +290,55 @@ game_paused:
     and #joystick_mask_start        ;  |
     beq -                           ; /
     +fn_locate 31,27, str_paused_clr; )- remove "paused" text
+    pla                             ; \_ restore global volume
+    sta global_volume               ; /
+    pla                             ; \_ restore the scrolling speed
+    sta scroll_speed                ; /
+    jmp game_loop
+
+
+throw_panic:
+    lda scroll_speed                ; \
+    pha                             ;  |- backup & clear scrolling speed
+    stz scroll_speed                ; /
+    lda global_volume               ; \
+    pha                             ;  |- backup & clear global volume
+    stz global_volume               ; /
+    dec panics                      ; \_ update panics counter
+    jsr refresh_panics              ; /
+    ldx #$03                        ; \
+    ldy #$7C                        ;  |- change bullet sprite
+    lda #bullet_panic_spid          ;  |
+    jsr change_obj_sprite           ; /
+    lda #$00                        ; \
+    ldx obj_count                   ;  |- add object count to score
+    ldy #$00                        ;  |
+    dex                             ;  | \_ remove player & virus
+    dex                             ;  | /
+    jsr add_to_score                ; /
+    ldx #$3C                        ; \
+-   jsr sleep_one_frame             ;  |- sleep 1 second
+    dex                             ;  |
+    bne -                           ; /
+    ldx #$08                        ; \
+-   lda obj_table,x                 ;  |
+    sta x16_r0,x                    ;  |- backup the first two objects
+    dex                             ;  |  (player and virus)
+    cpx #$FF                        ;  |
+    bne -                           ; /
+    jsr reset_objects               ; \
+    lda #$02                        ;  |- reset objects and set count to 2
+    sta obj_count                   ; /
+    ldx #$08                        ; \
+-   lda x16_r0,x                    ;  |
+    sta obj_table,x                 ;  |- restore the first two objects
+    dex                             ;  |
+    cpx #$FF                        ;  |
+    bne -                           ; /
+    ldx #$03                        ; \
+    ldy #$7C                        ;  |- restore bullet sprite
+    lda #bullet_spid                ;  |
+    jsr change_obj_sprite           ; /
     pla                             ; \_ restore global volume
     sta global_volume               ; /
     pla                             ; \_ restore the scrolling speed
