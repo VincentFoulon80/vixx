@@ -162,25 +162,31 @@ init_game_screen:
 
 ; ###########################
 init_game:                  ;
-    stz invincibility_cnt   ;
-    stz score_over_time     ;
-    lda #<choregraphy_start ;
-    sta choregraphy_pc_l    ;
-    lda #>choregraphy_start ;
-    sta choregraphy_pc_h    ;
-    lda #$05                ;
-    sta lives               ;
-    lda #$03                ;
-    sta panics              ;
-    stz score_87            ;
-    stz score_65            ;
-    stz score_43            ;
-    stz score_21            ;
-    jsr reset_objects       ;
-    jsr refresh_hiscore     ;
-    jsr refresh_score       ;
-    jsr refresh_lives       ;
-    jsr refresh_panics      ;
+    stz invincibility_cnt   ; )- reset invincibility
+    stz score_over_time     ; )- reset score over time
+    lda #<choregraphy_start ; \
+    sta choregraphy_pc_l    ;  |- reset choregraphy
+    lda #>choregraphy_start ;  |
+    sta choregraphy_pc_h    ; /
+    lda #$05                ; \
+    sta lives               ;  |- reset lives & panics
+    lda #$03                ;  |
+    sta panics              ; /
+    stz score_87            ; \
+    stz score_65            ;  |- reset score
+    stz score_43            ;  |
+    stz score_21            ; /
+    jsr reset_objects       ; )- reset objects
+    jsr refresh_hiscore     ; \
+    jsr refresh_score       ;  |- reset ui
+    jsr refresh_lives       ;  |
+    jsr refresh_panics      ; /
+    lda #player_spid        ; \_ reset player sprite
+    jsr change_player_sprite; /
+    ldx #$02                ; \
+    ldy #$7D                ;  |- reset bullet sprite
+    lda #bullet_spid        ;  |
+    jsr change_obj_sprite   ; /
     rts                     ;
 ; ###########################
 
