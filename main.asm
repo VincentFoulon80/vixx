@@ -237,10 +237,48 @@ game_over:
 gamemode_game_init = $01
 gamemode_game = $02
 game_loop:
+    lda #0                          ; \
+    jsr joystick_get                ;  |- check for start button
+    and #joystick_mask_start        ;  |
+    bne +                           ; /
+    jmp game_paused
++
+
 !src "components/objects.asm"
 !src "components/music.asm"
 !src "components/choregraphy.asm"
 
+    jmp game_loop
+
+game_paused:
+    lda scroll_speed                ; \
+    pha                             ;  |- backup & clear scrolling speed
+    stz scroll_speed                ; /
+-   jsr sleep_one_frame
+    lda #0                          ; \
+    jsr joystick_get                ;  |- check release start button
+    and #joystick_mask_start        ;  |
+    beq -                           ; /
+-   jsr sleep_one_frame             ; \
+    lda frame_count                 ;  |
+    and #$20                        ;  |- display a blinking "paused"
+    bne +                           ;  |
+    +fn_locate 31,27, str_paused    ;  |
+    jmp .paused_text_printed        ;  |
++   +fn_locate 31,27, str_paused_clr;  |
+.paused_text_printed:               ; /
+    lda #0                          ; \
+    jsr joystick_get                ;  |- check for start button
+    and #joystick_mask_start        ;  |
+    bne -                           ; /
+-   jsr sleep_one_frame
+    lda #0                          ; \
+    jsr joystick_get                ;  |- check release start button
+    and #joystick_mask_start        ;  |
+    beq -                           ; /
+    +fn_locate 31,27, str_paused_clr; )- remove "paused" text
+    pla                             ; \_ restore the scrolling speed
+    sta scroll_speed                ; /
     jmp game_loop
 
 ; =======================================================================================================
