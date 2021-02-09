@@ -19,8 +19,10 @@ save_score
     ldy #>file_hiscore_w    ;  | )- file name
     jsr SETNAM              ; /  )- set filename
     jsr OPEN                ; )- open file
+    bcs .save_failed        ; )- or fail
     jsr check_disk_error    ; )- check file status
     bcc +                   ; \
+.save_failed:               ;  |
     lda #HISCORE_FILE       ;  |
     jsr CLOSE               ;  |- if error we skip
     jmp .save_score_end     ;  |
@@ -87,8 +89,10 @@ load_score:
     ldy #>file_hiscore_r    ;  | )- file name
     jsr SETNAM              ; /  )- set filename
     jsr OPEN                ; )- open file
+    bcs .load_failed        ; )- or fail
     jsr check_disk_error    ; )- check file status
     bcc +                   ; \
+.load_failed:               ;  |
     stz hiscore_87          ;  |
     stz hiscore_65          ;  |- if error we set a default value else we continue
     stz hiscore_43          ;  |
