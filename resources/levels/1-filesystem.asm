@@ -301,7 +301,7 @@
 !byte CHOR_OP_SLP, $20
 !byte CHOR_OP_COB, $01, id_mov_rng, $00
 !byte CHOR_OP_SLP, $90
-!byte CHOR_OP_SPR, $02, $01, virus2_spid
+!byte CHOR_OP_SPR, $01, $01, virus2_spid
 !byte CHOR_OP_LIF
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_COB, $01, id_mov_incr, $00
