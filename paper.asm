@@ -126,7 +126,13 @@ dividend        = $46
 divisor         = $47
 remainder       = $48
 result          = dividend
-global_volume   = $4F
+sfx_duration    = $49
+sfx_freq_l      = $4A
+sfx_freq_h      = $4B
+sfx_wave        = $4C
+sfx_change      = $4D
+music_volume    = $4E
+sfx_volume      = $4F
 
 score_over_time     = $72
 scroll_speed        = $73
@@ -258,8 +264,10 @@ game_mode           = $7F
     lda #gamemode_title                 ; \_ set gamemode to titlescreen
     sta game_mode                       ; /
 
-    lda #63                             ; \_ init global volume
-    sta global_volume                   ; /
+    lda #63                             ; \
+    sta music_volume                    ;  |- init global volume
+    lda #63                             ;  |
+    sta sfx_volume                      ; /
     lda #<proto                         ; \
     sta composer_pc_l                   ;  |- TEMPORARY PLACEMENT
     lda #>proto                         ;  |  init music engine pc

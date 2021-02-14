@@ -264,9 +264,9 @@ game_paused:
     lda scroll_speed                ; \
     pha                             ;  |- backup & clear scrolling speed
     stz scroll_speed                ; /
-    lda global_volume               ; \
+    lda music_volume                ; \
     pha                             ;  |- backup & clear global volume
-    stz global_volume               ; /
+    stz music_volume                ; /
 -   jsr sleep_one_frame             ; \
     lda #0                          ;  |
     jsr joystick_get                ;  |- check release start button
@@ -291,7 +291,7 @@ game_paused:
     beq -                           ; /
     +fn_locate 31,27, str_paused_clr; )- remove "paused" text
     pla                             ; \_ restore global volume
-    sta global_volume               ; /
+    sta music_volume                ; /
     pla                             ; \_ restore the scrolling speed
     sta scroll_speed                ; /
     jmp game_loop
@@ -301,11 +301,16 @@ throw_panic:
     lda scroll_speed                ; \
     pha                             ;  |- backup & clear scrolling speed
     stz scroll_speed                ; /
-    lda global_volume               ; \
+    lda music_volume                ; \
     pha                             ;  |- backup & clear global volume
-    stz global_volume               ; /
+    stz music_volume                ; /
     dec panics                      ; \_ update panics counter
     jsr refresh_panics              ; /
+    lda #<game_sfx_panic
+    sta x16_r0_l
+    lda #>game_sfx_panic
+    sta x16_r0_h
+    jsr play_sfx
     ldx #$02                        ; \
     ldy #$7D                        ;  |- change bullet sprite
     lda #bullet_panic_spid          ;  |
@@ -340,8 +345,13 @@ throw_panic:
     ldy #$7D                        ;  |- restore bullet sprite
     lda #bullet_spid                ;  |
     jsr change_obj_sprite           ; /
+    lda #<game_sfx_panic2
+    sta x16_r0_l
+    lda #>game_sfx_panic2
+    sta x16_r0_h
+    jsr play_sfx
     pla                             ; \_ restore global volume
-    sta global_volume               ; /
+    sta music_volume                ; /
     pla                             ; \_ restore the scrolling speed
     sta scroll_speed                ; /
     jmp game_loop
@@ -487,7 +497,7 @@ psg_upload:
     asl                         ;  |
     tax                         ; /
     lda psg_vo_volumeHi,y                       ; \
-    and global_volume                           ;  |- set instrument waveform
+    and music_volume                            ;  |- set instrument waveform
     ora instrument_def + instr_idx_direction,x  ;  |  volume and direction
     sta vera_data_0                             ;  |  based on instrument table
     lda instrument_def + instr_idx_waveform,x   ;  |
@@ -496,6 +506,46 @@ psg_upload:
     iny                         ; \
     cpy #$08                    ;  |- loop through 8 voices
     bne -                       ; /
+
+psg_upload_sfx:
+    lda sfx_duration            ; \
+    bne +                       ;  |- check if should play a sfx
+    stz vera_data_0             ;  |
+    stz vera_data_0             ;  |
+    stz vera_data_0             ;  |
+    stz vera_data_0             ;  |
+    bra psg_upload_end          ; /
++                               ;
+    lda sfx_freq_l              ; \
+    sta vera_data_0             ;  |- upload SFX to PSG
+    lda sfx_freq_h              ;  |
+    sta vera_data_0             ;  |
+    lda sfx_volume              ;  |
+    ora #vera_psg_left|vera_psg_right
+    sta vera_data_0             ;  |
+    lda sfx_wave                ;  |
+    sta vera_data_0             ; /
+
+    lda sfx_change              ; \
+    beq psg_upload_sfx_end      ;  |- update frequency and duration
+    bmi +                       ;  |
+    and #$7F                    ;  | \
+    clc                         ;  |  |
+    adc sfx_freq_l              ;  |  |- add to frequency
+    bcc psg_upload_sfx_end      ;  |  |
+    inc sfx_freq_h              ;  |  |
+    bra psg_upload_sfx_end      ;  | /
++   and #$7F                    ;  | \
+    sta unsafe_addr_l           ;  |  |
+    lda sfx_freq_l              ;  |  |- substract to frequency
+    sec                         ;  |  |
+    sbc sfx_change              ;  |  |
+    bcs psg_upload_sfx_end      ;  |  |
+    dec sfx_freq_h              ;  |  |
+    bra psg_upload_sfx_end      ;  | /
+psg_upload_sfx_end:             ;  | \
+    sta sfx_freq_l              ;  |  |- save the calculated values
+    dec sfx_duration            ; /  /
 psg_upload_end:
 
 restore_vera_addr:
@@ -525,6 +575,7 @@ irq_done:                       ;  |  and hand over to the kernal's IRQ handler
 !src "resources/sprites.asm"
 !src "resources/tiles.asm"
 
+!src "resources/sfx.asm"
 !src "resources/musics/proto1.asm"
 
 choregraphy_start:

@@ -342,8 +342,13 @@ handle_touched:
 player_touched:             ;
     lda #INVINCIBILITY_FRAMES;\_ set invincibility frames
     sta invincibility_cnt   ; /
-    lda #touched_player_spid ;
+    lda #touched_player_spid;
     jsr change_player_sprite;
+    lda #<game_sfx_touched
+    sta x16_r0_l
+    lda #>game_sfx_touched
+    sta x16_r0_h
+    jsr play_sfx
     dec lives               ; \
     bne +                   ;  |- decrease lives, and handle gameover
     sec
@@ -352,6 +357,33 @@ player_touched:             ;
     clc
     rts                     ;
 ; ###########################
+
+; ###########################
+; r0 = sfx addr
+; byte order:
+;   sfx_duration
+;   sfx_freq_l
+;   sfx_freq_h
+;   sfx_wave
+;   sfx_change
+play_sfx:
+    ldy #$01
+    lda (x16_r0_l),y
+    sta sfx_freq_l
+    iny
+    lda (x16_r0_l),y
+    sta sfx_freq_h
+    iny
+    lda (x16_r0_l),y
+    sta sfx_wave
+    iny
+    lda (x16_r0_l),y
+    sta sfx_change
+    lda (x16_r0_l)          ; \_ duration is set last because of IRQ
+    sta sfx_duration        ; /
+    rts
+; ###########################
+
 
 ; ###########################
 ; a = spid
