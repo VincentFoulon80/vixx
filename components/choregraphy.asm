@@ -17,6 +17,7 @@ CHOR_OP_PRD = $21 ; PRint Direct mode       : pos_x, pos_y, ...null_terminated_s
 CHOR_OP_CHR = $22 ; print CHaR              : pos_x, pos_y, character
 CHOR_OP_SBG = $23 ; Set BackGround          ; tile_id
 CHOR_OP_SCR = $24 ; change SCRoll speed     ; speed
+CHOR_OP_MUS = $25 ; change music            ; addr_l, addr_h
 
 CHOR_OP_LDA = $30 ; LoaD regA               : immediate value
 CHOR_OP_INA = $31 ; INcrement regA          : 
@@ -198,6 +199,14 @@ run_choregraphy:
     bne +                           ;  |- SET SCROLL SPEED ( speed )
         jsr .chor_next_byte         ;  |
         sta scroll_speed            ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_MUS                ; \
+    bne +                           ;  |- CHANGE MUSIC ( addr_l, addr_h )
+        jsr .chor_next_byte         ;  |
+        sta composer_pc_l           ;  |
+        jsr .chor_next_byte         ;  |
+        sta composer_pc_h           ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_LDA                ; \

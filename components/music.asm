@@ -111,6 +111,7 @@ N_AS8 = $6B
 N_B8  = $6C
 N_STP = $6D ; stop current note
 N_GNP = $6E ; global NOP
+N_GSP = $6F ; global STOP
 
 N_JMS = $FA ; Jump to a section
 N_RTS = $FB ; Return from a section
@@ -463,11 +464,24 @@ instrument_end:
     sta composer_delay          ; /
 composer_start:
     ldy psg_vo_cnt
--
     jsr .music_next_byte
     ; look for command
     cmp #N_GNP                  ; \
     bne +                       ;  |- GLOBAL NOP ()
+        jmp composer_end        ;  |  nop all voices at once
+    jmp composer_start          ; /
++
+    cmp #N_GSP                  ; \
+    bne +                       ;  |- GLOBAL STOP ()
+        ldx #$00                ;  |
+    -                           ;  |
+        lda #$00                ;  |
+        sta psg_vo_note,x       ;  |
+        lda #$01                ;  |
+        sta psg_vo_mode,x       ;  |
+        inx                     ;  |
+        cpx #$08                ;  |
+        bne -                   ;  |
         jmp composer_end        ;  |  nop all voices at once
     jmp composer_start          ; /
 +
@@ -538,7 +552,7 @@ composer_start:
     sta psg_vo_mode,x           ; /
 +   dey
     beq composer_end            ; \
-    inx                         ;  |- continue to read the strem until
+    inx                         ;  |- continue to read the stream until
     jsr .music_next_byte        ;  |  all voices has been processed
     jmp -                       ; /
 
@@ -599,13 +613,20 @@ instr_idx_vol_sus    = $05
 instr_idx_direction  = $06
 instr_idx_not_used   = $07
 
+I_LONG_SAW      = $00
+I_LONG_PULSE    = $01
+I_LONG_TRIANGLE = $02
+I_SAW           = $03
+I_SHORT_NOISE   = $04
+I_SHORT_PULSE   = $05
+
 instrument_def:
-    !byte vera_psg_waveform_pulse, $22, $0E, 0, 63, $3F, vera_psg_left|vera_psg_right, 0
-    !byte vera_psg_waveform_pulse, $22, $AE, 0, 63, $3F, vera_psg_left|vera_psg_right, 0
-    !byte vera_psg_waveform_sawtooth, $32, $0E, 0, 63, 63, vera_psg_left|vera_psg_right, 0
-    !byte vera_psg_waveform_sawtooth, $32, $0E, 0, 47, 47, vera_psg_left|vera_psg_right, 0
-    !byte vera_psg_waveform_noise, $22, $05, 0, 63, 63, vera_psg_left|vera_psg_right, 0
-    !byte vera_psg_waveform_pulse, $22, $05, 0, 63, 63, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_sawtooth,   $22, $AE, 0, 63, 63, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_pulse,      $22, $AE, 0, 63, 63, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_triangle,   $22, $AE, 0, 63, 63, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_sawtooth,   $32, $0E, 0, 47, 47, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_noise,      $22, $05, 0, 63, 63, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_pulse,      $22, $05, 0, 63, 63, vera_psg_left|vera_psg_right, 0
 
 durations:
     !byte 0

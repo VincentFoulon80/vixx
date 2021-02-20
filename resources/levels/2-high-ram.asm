@@ -2,7 +2,8 @@
 
 .lvl2_start:
 ; insert player
-!byte CHOR_OP_SPR, $03, $7C, bullet_spid
+!byte CHOR_OP_MUS, <music_idle, >music_idle
+!byte CHOR_OP_SPR, $02, $7D, bullet_spid
 !byte CHOR_OP_SPS, $00, $FF
 !byte CHOR_OP_INS, id_mov_incr, $00
 !pet CHOR_OP_CHR, 4, 4, "l"
@@ -65,6 +66,7 @@
 !pet CHOR_OP_PRD, 15,5,"          ", PET_NULL
 !byte CHOR_OP_SLP, $3C
 
+!pet CHOR_OP_PRD, 4,4, "-end of game-"
 
 .lvl2_s2:
 !byte CHOR_OP_SPS, $00, $01

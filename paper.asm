@@ -123,16 +123,18 @@ composer_sr     = $44
 composer_sr_l   = $44
 composer_sr_h   = $45
 dividend        = $46
-divisor         = $47
-remainder       = $48
+;dividend+1     = $47
+divisor         = $48
+remainder       = $49
+;remainder+1    = $4A
 result          = dividend
-sfx_duration    = $49
-sfx_freq_l      = $4A
-sfx_freq_h      = $4B
-sfx_wave        = $4C
-sfx_change      = $4D
-music_volume    = $4E
-sfx_volume      = $4F
+sfx_duration    = $4B
+sfx_freq_l      = $4C
+sfx_freq_h      = $4D
+sfx_wave        = $4E
+sfx_change      = $4F
+music_volume    = $50
+sfx_volume      = $51
 
 score_over_time     = $72
 scroll_speed        = $73
@@ -268,12 +270,4 @@ game_mode           = $7F
     sta music_volume                    ;  |- init global volume
     lda #63                             ;  |
     sta sfx_volume                      ; /
-    lda #<proto                         ; \
-    sta composer_pc_l                   ;  |- TEMPORARY PLACEMENT
-    lda #>proto                         ;  |  init music engine pc
-    sta composer_pc_h                   ; /
-    lda #$3C                            ; \
-    sta composer_rythm                  ;  |- TEMPORARY PLACEMENT
-    lda #$3C                            ;  |  init music engine vars
-    sta composer_delay                  ; /
 }

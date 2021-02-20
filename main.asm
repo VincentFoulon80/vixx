@@ -576,7 +576,17 @@ irq_done:                       ;  |  and hand over to the kernal's IRQ handler
 !src "resources/tiles.asm"
 
 !src "resources/sfx.asm"
-!src "resources/musics/proto1.asm"
+
+music_idle:
+    !byte N_GSP
+    !byte N_VOI,1
+    !byte N_RTM, 10
+music_idle_lp:
+    !byte N_GNP
+    !byte N_JMP, <music_idle_lp, >music_idle_lp
+
+!src "resources/musics/boss1.asm"
+!src "resources/musics/seeking.asm"
 
 choregraphy_start:
 !src "resources/levels/1-filesystem.asm"

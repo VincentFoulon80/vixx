@@ -168,6 +168,14 @@ init_game:                  ;
     sta choregraphy_pc_l    ;  |- reset choregraphy
     lda #>choregraphy_start ;  |
     sta choregraphy_pc_h    ; /
+    lda #<music_idle        ; \
+    sta composer_pc_l       ;  |- init music engine pc
+    lda #>music_idle        ;  |
+    sta composer_pc_h       ; /
+    lda #$3C                ; \
+    sta composer_rythm      ;  |- init music engine vars
+    lda #$3C                ;  |
+    sta composer_delay      ; /
     lda #$05                ; \
     sta lives               ;  |- reset lives & panics
     lda #$03                ;  |

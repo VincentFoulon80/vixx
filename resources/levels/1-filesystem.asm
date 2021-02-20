@@ -2,6 +2,7 @@
 
 .lvl1_start:
 ; insert player
+!byte CHOR_OP_MUS, <m_seeking, >m_seeking
 !byte CHOR_OP_SBG, t_square_id
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
@@ -230,6 +231,7 @@
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_MOB, $01, $6D, $00
 !byte CHOR_OP_COB, $01, id_mov_incr, $01
+!byte CHOR_OP_MUS, <m_boss1, >m_boss1
 !pet CHOR_OP_PRD, 2,4, "       ", PET_NULL
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_COB, $01, id_mov_incr, $00
@@ -319,5 +321,6 @@
 !pet CHOR_OP_PRD, 2,4,"              ", PET_NULL
 !pet CHOR_OP_PRD, 2,5,"               ", PET_NULL
 !pet CHOR_OP_PRD, 2,7,"              ", PET_NULL
+!pet CHOR_OP_MUS, <music_idle, >music_idle
 
 ; --- end of lvl1
