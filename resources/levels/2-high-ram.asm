@@ -2,7 +2,7 @@
 
 .lvl2_start:
 ; insert player
-!byte CHOR_OP_MUS, <music_idle, >music_idle
+!byte CHOR_OP_MUS, <m_datarain, >m_datarain
 !byte CHOR_OP_SPR, $02, $7D, bullet_spid
 !byte CHOR_OP_SPS, $00, $FF
 !byte CHOR_OP_INS, id_mov_incr, $00

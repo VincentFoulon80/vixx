@@ -585,8 +585,9 @@ music_idle_lp:
     !byte N_GNP
     !byte N_JMP, <music_idle_lp, >music_idle_lp
 
-!src "resources/musics/boss1.asm"
+!src "resources/musics/coward_menace.asm"
 !src "resources/musics/seeking.asm"
+!src "resources/musics/data_rain.asm"
 
 choregraphy_start:
 !src "resources/levels/1-filesystem.asm"

@@ -2,10 +2,9 @@
 ; it contains variables, explications and other neat stuff
 ;
 ; VIDEO DETAILS :
-; screensize: 160x120
-; Background: unused
+; screensize: 320x240
 ;
-; Layer 0   : map 32x32 4bpp
+; Layer 0   : map 16x32 8bpp
 ;       tile data: $1 0000
 ;       map data : $1 8000
 vram_layer0_tilebase_b  = $01
@@ -13,7 +12,7 @@ vram_layer0_tilebase    = $0000
 vram_layer0_mapbase_b   = $01
 vram_layer0_mapbase     = $8000
 ;
-; Layer 1   : text 32x32 1bpp
+; Layer 1   : text (system default)
 ;       tile data: system default
 ;       map data : $0 0000
 ;vram_layer1_tilebase = 
@@ -21,7 +20,7 @@ vram_layer1_mapbase_b   = $00
 vram_layer1_mapbase     = $0000
 ;
 ; Sprites   :
-;       player : 8x16 $0 8000
+;       128 8x8 4bpp $0 8000
 vram_sprites_base_b     = $00
 vram_sprites_base       = $8000
 ;
@@ -33,9 +32,6 @@ vram_sprites_base       = $8000
 
 
 ; ADDRESSES AND STUFF
-;choregraphy_start = $9000
-
-;obj_fn_table = $9E00
 obj_size =      $04
 obj_idx_type =  $00
 obj_idx_param = $01

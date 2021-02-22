@@ -231,7 +231,7 @@
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_MOB, $01, $6D, $00
 !byte CHOR_OP_COB, $01, id_mov_incr, $01
-!byte CHOR_OP_MUS, <m_boss1, >m_boss1
+!byte CHOR_OP_MUS, <m_cowardmenace, >m_cowardmenace
 !pet CHOR_OP_PRD, 2,4, "       ", PET_NULL
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_COB, $01, id_mov_incr, $00

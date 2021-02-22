@@ -4,7 +4,7 @@
 ; Original song by Vincent Foulon
 
 m_seeking:
-    !byte N_INS, 0, I_SHORT_PULSE
+    !byte N_INS, 0, I_TINY_PULSE
     !byte N_INS, 1, I_LONG_SAW
     !byte N_INS, 2, I_LONG_PULSE
     !byte N_INS, 3, I_LONG_PULSE
