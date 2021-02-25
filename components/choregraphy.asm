@@ -6,11 +6,13 @@ CHOR_MODE_TRACKING = $01
 CHOR_OP_SLP = $00 ; SLeeP                   : amount
 CHOR_OP_INS = $01 ; INSert object           : type, param
 CHOR_OP_BIS = $02 ; Bulk InSert             : count, (type, param,)
-CHOR_OP_SPS = $03 ; Set PoSition (absolute) : pos_x, pos_y
-CHOR_OP_MPS = $04 ; Move PoSition (relative): delta_x, delta_y
-CHOR_OP_FPS = $05 ; Fast Move Position (rel): delta_xy
-CHOR_OP_SRX = $06 ; Set Random X position   ;
-CHOR_OP_SRY = $07 ; Set Random Y position   ;
+CHOR_OP_ISP = $03 ; INSert at Position      : pos_x, pos_y, type, param
+CHOR_OP_SPS = $04 ; Set PoSition (absolute) : pos_x, pos_y
+CHOR_OP_MPS = $05 ; Move PoSition (relative): delta_x, delta_y
+CHOR_OP_FPS = $06 ; Fast Move Position (rel): delta_xy
+CHOR_OP_SRX = $07 ; Set Random X position   ;
+CHOR_OP_SRY = $08 ; Set Random Y position   ;
+CHOR_OP_SEK = $09 ; SEeK object position    ; obj_id
 
 CHOR_OP_PRT = $20 ; PRinT text              : pos_x, pos_y, str_addr_l, str_addr_h
 CHOR_OP_PRD = $21 ; PRint Direct mode       : pos_x, pos_y, ...null_terminated_str
@@ -36,6 +38,7 @@ CHOR_OP_COB = $A2 ; Configure OBject        ; obj_id, type, param
 CHOR_OP_SCO = $B0 ; SCOre points            ; XX0000,XX00,XX
 CHOR_OP_SOT = $B1 ; set Score Over Time     ; score
 CHOR_OP_LIF = $B2 ; Give a life             ; 
+CHOR_OP_PNC = $B3 ; Give a panic            ; 
 
 CHOR_OP_JMP = $E0 ; JuMP to address         : addr_l, addr_h
 CHOR_OP_JAZ = $E1 ; Jump If regA is Zero    : addr_l, addr_h
@@ -97,6 +100,19 @@ run_choregraphy:
             bne .op_bis_lp      ;  |
     jmp .chor_end               ; /
 +
+    cmp #CHOR_OP_ISP            ; \
+    bne +                       ;  |- INSERT AT POS ( pos_x, pos_y, type, param )
+        jsr .chor_next_byte     ;  |
+        sta r_obj_x             ;  |
+        jsr .chor_next_byte     ;  |
+        sta r_obj_y             ;  |
+        jsr .chor_next_byte     ;  |
+        sta r_obj_t             ;  |
+        jsr .chor_next_byte     ;  |
+        sta r_obj_p             ;  |
+        jsr insert_object       ;  |
+    jmp .chor_end               ; /
++
     cmp #CHOR_OP_SPS            ; \
     bne +                       ;  |- SET POSITION ( pos_x, pos_y )
         jsr .chor_next_byte     ;  |
@@ -144,20 +160,45 @@ run_choregraphy:
         sta choregraphy_pos_y   ;  |
     jmp .chor_end               ; /
 +
-    cmp #CHOR_OP_PRT            ; \
-    bne +                       ;  |- PRINT TEXT ( pos_x, pos_y, str_addr_l, str_addr_h )
-        jsr .chor_next_byte     ;  |
-        tay                     ;  |
-        jsr .chor_next_byte     ;  |
-        tax                     ;  |
-        clc                     ;  |
-        jsr PLOT                ;  |
-        jsr .chor_next_byte     ;  |
-        sta x16_r0_l            ;  |
-        jsr .chor_next_byte     ;  |
-        sta x16_r0_h            ;  |
-        jsr print               ;  |
+    cmp #CHOR_OP_SEK            ; \
+    bne +                       ;  |- SEEK OBJECT POSITION ( obj_id )
+        stz x16_r0_l            ;  |
+        stz x16_r0_h            ;  |
+        jsr .chor_next_byte     ;  | \
+        tax                     ;  |  |
+        -   clc                 ;  |  |
+            +adc16 x16_r0, $04  ;  |  |- find the object's address
+            dex                 ;  |  |
+            bne -               ;  | /
+        lda #<obj_table+2       ;  | \
+        clc                     ;  |  |
+        adc x16_r0_l            ;  |  |- load the object address into
+        sta x16_r0_l            ;  |  |  x16_r0
+        lda #>obj_table         ;  |  |
+        adc x16_r0_h            ;  |  |
+        sta x16_r0_h            ;  | /
+        lda (x16_r0_l)          ;  |
+        sta choregraphy_pos_x   ;  |
+        +inc16 x16_r0           ;  |
+        lda (x16_r0_l)          ;  |
+        sta choregraphy_pos_y   ;  |
     jmp .chor_end               ; /
++
+    cmp #CHOR_OP_PRT                ; \
+    bne +                           ;  |- PRINT TEXT ( pos_x, pos_y, str_addr_l, str_addr_h )
+        +fn_print str_white_on_black;  |
+        jsr .chor_next_byte         ;  |
+        tay                         ;  |
+        jsr .chor_next_byte         ;  |
+        tax                         ;  |
+        clc                         ;  |
+        jsr PLOT                    ;  |
+        jsr .chor_next_byte         ;  |
+        sta x16_r0_l                ;  |
+        jsr .chor_next_byte         ;  |
+        sta x16_r0_h                ;  |
+        jsr print                   ;  |
+    jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_PRD                ; \
     bne +                           ;  |- PRINT DIRECT MODE ( pos_x, pos_y, ...null_terminated_str )
@@ -207,6 +248,8 @@ run_choregraphy:
         sta composer_pc_l           ;  |
         jsr .chor_next_byte         ;  |
         sta composer_pc_h           ;  |
+        lda #$3B                    ;  |
+        sta composer_delay          ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_LDA                ; \
@@ -333,8 +376,22 @@ run_choregraphy:
 +
     cmp #CHOR_OP_LIF                ; \
     bne +                           ;  |- GIVE A LIFE ()
+        lda #$08                    ;  | \
+        cmp lives                   ;  |  |- max 8
+        beq .op_lif_end             ;  | /
         inc lives                   ;  |
         jsr refresh_lives           ;  |
+        .op_lif_end:                ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_PNC                ; \
+    bne +                           ;  |- GIVE A PANIC ()
+        lda #$08                    ;  | \
+        cmp panics                  ;  |  |- max 8
+        beq .op_pnc_end             ;  | /
+        inc panics                  ;  |
+        jsr refresh_panics          ;  |
+        .op_pnc_end:                ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_JMP                ; \

@@ -386,12 +386,45 @@ mov_rng:
     jmp mov_inc     ; )- then do an increment movement
 +   jmp mov_dec     ; )- else do a decrement movement
 
+
+id_mov_Iinc = $0A
+mov_Iinc:
+    lda frame_count ; \
+    and #$01        ;  |- load frame count parity into X
+    tax             ; /
+    lda r_obj_p     ; \_ load parameter's left side
+    and #$F0        ; /
+    clc             ; \
+    ror             ;  |
+    ror             ;  |- roll the parameter to the right
+    ror             ;  |
+    ror             ; /
+    ror             ; )- roll one more time to do the 1/2 speed
+    bcc +           ; \
+    cpx #$01        ;  |- if lowest bit set AND frame count odd:
+    bne +           ; /
+    inc r_obj_x     ; )- then increment x
++   clc             ; \
+    adc r_obj_x     ;  |- perform addition on x
+    sta r_obj_x     ; /
+    lda r_obj_p     ; \_ load parameter's right side
+    and #$0F        ; /
+    clc             ; \_ roll one time to do the 1/2 speed
+    ror             ; /
+    bcc +           ; \
+    cpx #$01        ;  |- if lowest bit set AND frame count odd:
+    bne +           ; /
+    inc r_obj_y     ; )- then increment y
++   clc             ; \
+    adc r_obj_y     ;  |- perform addition on y
+    sta r_obj_y     ; /
+    jmp mov_done    ; )- end of movement
+
 mov_dbg:            ; \
     !byte $DB       ;  |- invoke the debugger
     jmp mov_done    ; /
 
-
 ; function table for movements
 
 obj_fn_table:
-!word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc, mov_lut_circle, mov_lut_big_circle, mov_rng
+!word mov_null, mov_reset, mov_player, mov_inc, mov_dec, mov_inc_dec, mov_dec_inc, mov_lut_circle, mov_lut_big_circle, mov_rng, mov_Iinc

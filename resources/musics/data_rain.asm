@@ -4,11 +4,11 @@
 ; Original song by Vincent Foulon
 
 m_datarain:
+    !byte N_RTM, 12
     !byte N_INS, 0, I_SHORT_PULSE
     !byte N_INS, 1, I_TINY_SAW
     !byte N_INS, 2, I_LONG_PULSE
     !byte N_INS, 3, I_TINY_SAW
-    !byte N_RTM, 12
 m_datarain_1:
     !byte N_VOI, 2
     !byte N_JMS, <m_datarain_s1, >m_datarain_s1
@@ -257,13 +257,13 @@ m_datarain_43:
     !byte N_VOI, 2
     !byte N_INS, 0, I_TINY_NOISE
     !byte N_INS, 1, I_LONG_PULSE
-    !byte N_D2, N_D3
+    !byte N_D5, N_D3
     !byte N_GNP
-    !byte N_A2, N_E3
+    !byte N_A5, N_E3
     !byte N_NOP,N_NOP
-    !byte N_D2, N_A3
+    !byte N_D5, N_A3
     !byte N_NOP,N_D3
-    !byte N_A2, N_NOP
+    !byte N_A5, N_NOP
     !byte N_NOP,N_STP
 m_datarain_44:
     !byte N_VOI, 1
@@ -277,7 +277,12 @@ m_datarain_44:
     !byte N_NOP
     !byte N_STP
 
-    !byte N_JMP, <m_datarain, >m_datarain
+    !byte N_INS, 0, I_SHORT_PULSE
+    !byte N_INS, 1, I_TINY_SAW
+    !byte N_INS, 2, I_LONG_PULSE
+    !byte N_INS, 3, I_TINY_SAW
+;    !byte N_JMP, <m_datarain_19, >m_datarain_19
+    !byte N_JMP, <music_idle, >music_idle
 
 m_datarain_s1:
     !byte N_D2, N_D1

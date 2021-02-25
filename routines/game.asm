@@ -1,7 +1,7 @@
 !ifndef is_main !eof
 
 ; ###########################
-save_score
+save_game:
     lda score_87            ; \
     sta hiscore_87          ;  |
     lda score_65            ;  |- transfer score
@@ -10,24 +10,24 @@ save_score
     sta hiscore_43          ;  |
     lda score_21            ;  |
     sta hiscore_21          ; /
-    lda #HISCORE_FILE       ; \
+    lda #SAVE_FILE          ; \
     ldx #IO_DEVICE          ;  |- prepare logical file
     ldy #FILE_WRITE         ;  |
     jsr SETLFS              ; /
-    lda #file_hiscore_len+2 ; \  )- size of filename
-    ldx #<file_hiscore_w    ;  | )- address of
-    ldy #>file_hiscore_w    ;  | )- file name
+    lda #file_save_len+2 ; \  )- size of filename
+    ldx #<file_save_w    ;  | )- address of
+    ldy #>file_save_w    ;  | )- file name
     jsr SETNAM              ; /  )- set filename
     jsr OPEN                ; )- open file
     bcs .save_failed        ; )- or fail
     jsr check_disk_error    ; )- check file status
     bcc +                   ; \
 .save_failed:               ;  |
-    lda #HISCORE_FILE       ;  |
+    lda #SAVE_FILE          ;  |
     jsr CLOSE               ;  |- if error we skip
-    jmp .save_score_end     ;  |
+    jmp .save_game_end     ;  |
 +                           ; /
-    ldx #HISCORE_FILE       ; \_ set file as current channel
+    ldx #SAVE_FILE          ; \_ set file as current channel
     jsr CHKOUT              ; /
     lda score_87            ; \
     jsr CHROUT              ;  |
@@ -37,10 +37,14 @@ save_score
     jsr CHROUT              ;  |
     lda score_21            ;  |
     jsr CHROUT              ; /
+    lda music_volume        ; \_ write volume
+    jsr CHROUT              ; /
+    lda game_status         ; \_ write game status
+    jsr CHROUT              ; /
     jsr CLRCHN              ; \
-    lda #HISCORE_FILE       ;  |- close the file and reset channels
+    lda #SAVE_FILE          ;  |- close the file and reset channels
     jsr CLOSE               ; /
-.save_score_end:
+.save_game_end:
     rts
 ; ###########################
 
@@ -78,15 +82,15 @@ check_disk_error:
 ; ###########################
 
 ; ###########################
-load_score:
+load_game:
     ; LOAD SCORE
-    lda #HISCORE_FILE       ; \
+    lda #SAVE_FILE          ; \
     ldx #IO_DEVICE          ;  |- prepare logical file
     ldy #FILE_READ          ;  |
     jsr SETLFS              ; /
-    lda #file_hiscore_len   ; \  )- size of filename
-    ldx #<file_hiscore_r    ;  | )- address of
-    ldy #>file_hiscore_r    ;  | )- file name
+    lda #file_save_len   ; \  )- size of filename
+    ldx #<file_save_r    ;  | )- address of
+    ldy #>file_save_r    ;  | )- file name
     jsr SETNAM              ; /  )- set filename
     jsr OPEN                ; )- open file
     bcs .load_failed        ; )- or fail
@@ -97,12 +101,17 @@ load_score:
     stz hiscore_65          ;  |- if error we set a default value else we continue
     stz hiscore_43          ;  |
     stz hiscore_21          ;  |
-    lda #HISCORE_FILE       ;  |
+    stz game_status         ;  |
+    lda #$3F                ;  |
+    sta saved_volume        ;  |
+    sta music_volume        ;  |
+    sta sfx_volume          ;  |
+    lda #SAVE_FILE          ;  |
     jsr CLOSE               ;  |
-    jsr save_score          ;  |
-    jmp .load_score_end     ;  |
+    jsr save_game           ;  |
+    jmp .load_game_end      ;  |
 +                           ; /
-    ldx #HISCORE_FILE       ; \_ set file as current channel
+    ldx #SAVE_FILE          ; \_ set file as current channel
     jsr CHKIN               ; /
     jsr GETIN               ; \_ get first byte
     sta hiscore_87          ; /
@@ -112,10 +121,17 @@ load_score:
     sta hiscore_43          ;  |
     jsr GETIN               ;  |
     sta hiscore_21          ; /
+    jsr GETIN               ; \
+    and #$3F                ;  |- load the volume
+    sta saved_volume        ;  |
+    sta music_volume        ;  |
+    sta sfx_volume          ; /
+    jsr GETIN               ;  |
+    sta game_status         ; /
     jsr CLRCHN              ; \
-    lda #HISCORE_FILE       ;  |- close the file and reset channels
+    lda #SAVE_FILE          ;  |- close the file and reset channels
     jsr CLOSE               ; /
-.load_score_end:
+.load_game_end:
     rts
 ; ###########################
 

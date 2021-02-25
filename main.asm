@@ -108,7 +108,7 @@ title_screen:                       ;
     lda hiscore_87                  ;  |
     bne .score_loaded               ; /
 
-    jsr load_score                  ; )- load the score file
+    jsr load_game                   ; )- load the score file
 .score_loaded:                      ;
     lda #t_empty_id                 ; \
     jsr fill_layer0                 ;  |- reset game screen
@@ -135,9 +135,32 @@ title_screen:                       ;
 
     +fn_locate 9,16, str_press_start; )- display "press start"
 
-    +fn_plot 48, 0                  ; )- move cursor out of the screen
+    +fn_locate 8,24, str_volume_ctrl; )- display volume controls
     
--   lda wait_frame                  ; \
+    stz x16_r0                      ; )- clear r0
+display_volume_bar:
+    +fn_locate 1,25,str_ui_volume   ; \_ draw the volume UI
+    +fn_plot 10,25                  ; /
+    lda music_volume                ; \
+    inc                             ;  |- load the volume divided by 8
+    lsr                             ;  |  so we have 8 segments of volume
+    lsr                             ;  |
+    lsr                             ;  |
+    tax                             ; /
+    beq title_wait_start            ; \
+    lda #PET_COLOR_WHITE            ;  |- if we have segments to draw,
+    jsr CHROUT                      ;  |  print them
+    lda chr_volume                  ;  |
+-   jsr CHROUT                      ;  |
+    dex                             ;  |
+    bne -                           ;  |
+    lda #PET_COLOR_BLACK            ;  |
+    jsr CHROUT                      ; /
+title_wait_start:
+    lda wait_frame                  ; \
+    bne title_wait_start            ;  |- wait for next frame
+    inc wait_frame                  ; /
+    lda frame_count                 ; \
     and #$01                        ;  |- on every odd frame:
     bne +                           ;  |
     jsr rng                         ;  | \
@@ -147,19 +170,62 @@ title_screen:                       ;
     jsr rng                         ;  |  |  moves it randomly 1 pixel
     and #$01                        ;  |  |  right or down
     adc #$50                        ;  |  |
-    sta obj_table+7                 ; /  /
+    sta obj_table+7                 ;  | /
+    lda volume_cooldown             ;  | \
+    beq +                           ;  |  |- decrease volume countdown
+    dec volume_cooldown             ; /  /
 +   lda #0                          ; \
-    jsr joystick_get                ;  |- check for start button
-    and #joystick_mask_start        ;  |
-    bne -                           ; /
+    jsr joystick_get                ;  |- MAIN MENU
+    tay                             ;  |
+    and #joystick_mask_up           ;  | \
+    bne +                           ;  |  |- check for joystick UP
+    lda music_volume                ;  |  |  increase the game's volume
+    clc                             ;  |  |
+    adc #$08                        ;  |  |
+    bra title_update_volume         ;  | /
++   tya                             ;  | \
+    and #joystick_mask_down         ;  |  |- check for joystick DOWN
+    bne +                           ;  |  |  decrease the game's volume
+    lda music_volume                ;  |  |
+    sec                             ;  |  |
+    sbc #$08                        ;  |  |
+    bra title_update_volume         ;  | /
++   stz volume_cooldown             ;  | \
+    tya                             ;  |  |- check for joystick START
+    and #joystick_mask_start        ;  |  |  start the game
+    bne title_wait_start            ;  | /
+    bra title_started               ; /
+title_update_volume:
+    tax                             ; \
+    lda volume_cooldown             ;  |
+    bne title_wait_start            ;  |- updates volume, uses r2 as temporary cooldown
+    txa                             ;  |  
+    bpl +                           ;  | \_ lower limit ($00)
+    lda #$00                        ;  | /
++   cmp #$40                        ;  | \
+    bmi +                           ;  |  |- upper limit ($3F)
+    lda #$3F                        ;  | /
++   sta music_volume                ;  | \
+    sta sfx_volume                  ;  |  |- store the new volume 
+    lda #$05                        ;  |  |  and set the cooldown
+    sta volume_cooldown             ;  | /
+    lda #<game_sfx_pause            ;  | \
+    sta x16_r0_l                    ;  |  |- play the "pause" sfx
+    lda #>game_sfx_pause            ;  |  |  to give a sample to the user
+    sta x16_r0_h                    ;  |  |
+    jsr play_sfx                    ;  | /
+    jmp display_volume_bar          ; /
 
+title_started:
     ; game started
     +fn_locate 1,2, str_ui_game     ; \
     +fn_locate 1,3, str_ui_game     ;  |- clear the title screen
     +fn_locate 1,4, str_ui_game     ;  |
     +fn_locate 1,5, str_ui_game     ;  |
     +fn_locate 1,6, str_ui_game     ;  |
-    +fn_locate 0,16, str_ui_game_row; /
+    +fn_locate 1,16,str_ui_game     ;  |
+    +fn_locate 1,24,str_ui_game     ;  |
+    +fn_locate 1,25,str_ui_game     ; /
 
 -   jsr sleep_one_frame             ; \
     dec obj_table+7                 ;  |- move the virus to the
@@ -173,12 +239,18 @@ title_screen:                       ;
     dec obj_table+7                 ;  |
     dex                             ;  |
     bne -                           ; /
-                                    ;
+ 
+    lda music_volume                ; \
+    cmp saved_volume                ;  |- save volume setting
+    beq +                           ;  |
+    jsr save_game                   ; /
+
++
     ldx #$3C                        ; \
 -   jsr sleep_one_frame             ;  |- wait 1 second
     dex                             ;  |
     bne -                           ; /
-                                    ;
+
     lda #gamemode_game_init         ; \
     sta game_mode                   ;  |- change gamemode to INIT GAME
     jmp change_gamemode             ; /
@@ -186,10 +258,16 @@ title_screen:                       ;
 
 gamemode_gameover = $FE
 game_over:
+    lda #<game_sfx_gameover         ; \
+    sta x16_r0_l                    ;  |- play the "gameover" sfx
+    lda #>game_sfx_gameover         ;  |
+    sta x16_r0_h                    ;  |
+    jsr play_sfx                    ; /
     lda #t_empty_id                 ; \
     jsr fill_layer0                 ;  |- clear the game screen
     jsr reset_objects               ;  |  and display "game over"
     jsr sleep_one_frame             ;  |
+    jsr music_clear                 ;  |
     +fn_locate 10,10,str_game_over  ; /
     ; compare hiscore with score
     lda hiscore_87                  ; \
@@ -210,7 +288,7 @@ game_over:
 +   jmp .gameover_sleep             ; /
 
 .save_score:
-    jsr save_score                  ; )- save the score
+    jsr save_game                   ; )- save the score
 
     ldx #$3C                        ; \
 -   jsr sleep_one_frame             ;  |- wait 1 second
@@ -261,6 +339,11 @@ game_loop:
 
 
 game_paused:
+    lda #<game_sfx_pause            ; \
+    sta x16_r0_l                    ;  |- play the "pause" sfx
+    lda #>game_sfx_pause            ;  |
+    sta x16_r0_h                    ;  |
+    jsr play_sfx                    ; /
     lda scroll_speed                ; \
     pha                             ;  |- backup & clear scrolling speed
     stz scroll_speed                ; /
@@ -284,6 +367,11 @@ game_paused:
     jsr joystick_get                ;  |- check for start button
     and #joystick_mask_start        ;  |
     bne -                           ; /
+    lda #<game_sfx_pause            ; \
+    sta x16_r0_l                    ;  |- play the "pause" sfx
+    lda #>game_sfx_pause            ;  |
+    sta x16_r0_h                    ;  |
+    jsr play_sfx                    ; /
 -   jsr sleep_one_frame             ; \
     lda #0                          ;  |
     jsr joystick_get                ;  |- check release start button
@@ -315,12 +403,31 @@ throw_panic:
     ldy #$7D                        ;  |- change bullet sprite
     lda #bullet_panic_spid          ;  |
     jsr change_obj_sprite           ; /
-    lda #$00                        ; \
-    ldx obj_count                   ;  |- add object count to score
-    ldy #$00                        ;  |
-    dex                             ;  | \_ remove player & virus
-    dex                             ;  | /
-    jsr add_to_score                ; /
+    lda obj_count                   ; \ - add obj_count to score
+    dec                             ;  | \_ remove player & virus from count
+    dec                             ;  | /
+    sta x16_r0                      ;  |
+    jsr hex_to_dec                  ;  | )- convert obj_count to decimal #0123
+    ldy #$00                        ;  | )- Y should contain #00
+    lda x16_r0                      ;  | \
+    asl                             ;  |  |- shift hundreds
+    asl                             ;  |  |
+    asl                             ;  |  |
+    asl                             ;  |  |
+    sta x16_r0                      ;  | /
+    lda x16_r1_l                    ;  | \
+    lsr                             ;  |  |- X should contain #12
+    lsr                             ;  |  |
+    lsr                             ;  |  |
+    lsr                             ;  |  |
+    ora x16_r0                      ;  |  |
+    tax                             ;  | /
+    lda x16_r1_l                    ;  | \
+    asl                             ;  |  |- Y should contain #30
+    asl                             ;  |  |
+    asl                             ;  |  |
+    asl                             ;  | /
+    jsr add_to_score                ; /  )- should add #001230 to score
     ldx #$3C                        ; \
 -   jsr sleep_one_frame             ;  |- sleep 1 second
     dex                             ;  |
@@ -394,6 +501,41 @@ rng:
 	sta rng_seed_0
 	cmp #0                  ; reload flags
 	rts
+; ###########################
+
+; ###########################
+; Convert input into a BCD value (see http://6502.org/source/integers/hex2dec.htm)
+; input: r0
+; return: r1
+.htd_in = x16_r0
+.htd_out= x16_r1
+.htd_table: 
+    !word $01, $02, $04, $08, $10, $20, $40, $80
+                ; (Word directive puts low byte first.)
+
+hex_to_dec:
+    sed                 ; output gets added up in decimal.
+    stz .htd_out        ; inititalize output word as 0.
+    stz .htd_out+1
+
+    ldx #$0E            ; $e is 14 for 2x7 bits.  (0-7 is 8 positions.)
+-  
+    asl .htd_in         ; look at next high bit.  if it's 0,
+    bcc +               ; don't add anything to the output for this bit.
+    lda .htd_out        ; otherwise get the running output sum
+    clc
+    adc .htd_table,x    ; and add the appropriate value for this bit
+    sta .htd_out        ; from the table, and store the new sum.
+    lda .htd_out+1      ; after low byte, do high byte.
+    adc .htd_table+1,x
+    sta .htd_out+1
+
++   dex                 ; go down to next bit value to loop again.
+    dex
+    bpl -               ; if still not done, go back for another loop.
+
+    cld
+    rts
 ; ###########################
 
 !src "routines/game.asm"
@@ -590,10 +732,21 @@ music_idle_lp:
 !src "resources/musics/data_rain.asm"
 
 choregraphy_start:
+!byte CHOR_OP_SPS, $6F, $C7
+!byte CHOR_OP_INS, id_mov_plyr, $00
+!byte CHOR_OP_SPS, $00, $FF
+!byte CHOR_OP_INS, id_mov_incr, $00
 !src "resources/levels/1-filesystem.asm"
 !src "resources/levels/2-high-ram.asm"
 
-
+; force virus out
+!byte CHOR_OP_SPS, $00, $FF
+!byte CHOR_OP_INS, id_mov_incr, $00
+; end loop, kill the player
+!byte CHOR_OP_SPS, $01, $01
+!pet CHOR_OP_PRD, 8, 2, "- end of game -", PET_NULL
 .choregraphy_end:
-!byte CHOR_OP_SLP, $FF
+!byte CHOR_OP_SLP, $02
+!byte CHOR_OP_FPS, $60
+!byte CHOR_OP_INS, id_mov_incr, $04
 !byte CHOR_OP_JMP, <.choregraphy_end, >.choregraphy_end

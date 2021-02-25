@@ -4,10 +4,6 @@
 ; insert player
 !byte CHOR_OP_MUS, <m_seeking, >m_seeking
 !byte CHOR_OP_SBG, t_square_id
-!byte CHOR_OP_SPS, $6F, $C7
-!byte CHOR_OP_INS, id_mov_plyr, $00
-!byte CHOR_OP_SPS, $00, $FF
-!byte CHOR_OP_INS, id_mov_incr, $00
 !pet CHOR_OP_CHR, 4, 4, "l"
 !pet CHOR_OP_SLP, $08
 !pet CHOR_OP_CHR, 5, 4, "e"
@@ -202,7 +198,7 @@
 !byte CHOR_OP_SLP, $3C
 
 .lvl1_boss1:
-!pet CHOR_OP_PRD, 2,4, "warning", PET_NULL
+!pet CHOR_OP_PRT, 2,4, <lvl1_str_warning, >lvl1_str_warning
 !byte CHOR_OP_SCR, $0D
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $0E
@@ -211,7 +207,7 @@
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $08
 !byte CHOR_OP_SLP, $10
-!pet CHOR_OP_PRD, 2,4, "       ", PET_NULL
+!pet CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 !byte CHOR_OP_SCR, $05
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $06
@@ -220,7 +216,7 @@
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $04
 !byte CHOR_OP_SLP, $10
-!pet CHOR_OP_PRD, 2,4, "warning", PET_NULL
+!pet CHOR_OP_PRT, 2,4, <lvl1_str_warning, >lvl1_str_warning
 !byte CHOR_OP_SCR, $01
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $02
@@ -232,18 +228,18 @@
 !byte CHOR_OP_MOB, $01, $6D, $00
 !byte CHOR_OP_COB, $01, id_mov_incr, $01
 !byte CHOR_OP_MUS, <m_cowardmenace, >m_cowardmenace
-!pet CHOR_OP_PRD, 2,4, "       ", PET_NULL
+!pet CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_COB, $01, id_mov_incr, $00
-!pet CHOR_OP_PRD, 2,4, "warning", PET_NULL
+!pet CHOR_OP_PRT, 2,4, <lvl1_str_warning, >lvl1_str_warning
 !byte CHOR_OP_SLP, $40
-!pet CHOR_OP_PRD, 2,4, "       ", PET_NULL
-!byte CHOR_OP_LDA, $02
-!byte CHOR_OP_LDC, $10
+!pet CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 
 !byte CHOR_OP_SLP, $20
 !byte CHOR_OP_COB, $01, id_mov_bcir, $00
 !byte CHOR_OP_SLP, $3C
+!byte CHOR_OP_LDA, $02
+!byte CHOR_OP_LDC, $0D
 .lvl1_boss1_lp:
 !byte CHOR_OP_SPR, $02, $7D, bullet_glitch1_spid
 !byte CHOR_OP_SPS, $08, $10
@@ -277,7 +273,7 @@
 !byte CHOR_OP_LDB, $04
 !byte CHOR_OP_SPS, $00, $02
 .lvl1_boss1_lp2:
-!byte CHOR_OP_SLP, $18
+!byte CHOR_OP_SLP, $20
 !byte CHOR_OP_SPR, $02, $7D, bullet_glitch2_spid
 !byte CHOR_OP_SRX
 !byte CHOR_OP_DEA
@@ -304,7 +300,6 @@
 !byte CHOR_OP_COB, $01, id_mov_rng, $00
 !byte CHOR_OP_SLP, $90
 !byte CHOR_OP_SPR, $01, $01, virus2_spid
-!byte CHOR_OP_LIF
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_COB, $01, id_mov_incr, $00
 !byte CHOR_OP_SLP, $3C
@@ -313,14 +308,16 @@
 !pet CHOR_OP_PRD, 2,4,"level cleared!", PET_NULL
 !byte CHOR_OP_SLP, $3C
 !pet CHOR_OP_PRD, 2,5,"bonus: 1000 pts", PET_NULL
+!byte CHOR_OP_SLP, $18
+!pet CHOR_OP_PRD, 2,6,"       +1 life!", PET_NULL
+!byte CHOR_OP_LIF
 !byte CHOR_OP_SCO, $00, $10, $00
 !byte CHOR_OP_SLP, $72
 !pet CHOR_OP_PRD, 2,7,"remaining: 80%", PET_NULL
 !byte CHOR_OP_SLP, $72
 
-!pet CHOR_OP_PRD, 2,4,"              ", PET_NULL
-!pet CHOR_OP_PRD, 2,5,"               ", PET_NULL
-!pet CHOR_OP_PRD, 2,7,"              ", PET_NULL
-!pet CHOR_OP_MUS, <music_idle, >music_idle
-
+!pet CHOR_OP_PRT, 2,4, <lvl1_str_clr_ending, >lvl1_str_clr_ending
+!pet CHOR_OP_PRT, 2,5, <lvl1_str_clr_ending, >lvl1_str_clr_ending
+!pet CHOR_OP_PRT, 2,6, <lvl1_str_clr_ending, >lvl1_str_clr_ending
+!pet CHOR_OP_PRT, 2,7, <lvl1_str_clr_ending, >lvl1_str_clr_ending
 ; --- end of lvl1

@@ -42,20 +42,57 @@ t_square!byte $00,$00,$00,$00,$00,$00,$00,$7B
 !set .tile_addr = .tile_addr + .tile_size
 
 
-t_trace_id           = .tile_id
-t_trace_packet_size  = .tile_size
-t_trace_packet_qty   = $01
-t_trace_bank         = vram_layer0_tilebase_b
-t_trace_address      = .tile_addr
+t_trace_b0_id           = .tile_id
+t_trace_b0_packet_size  = .tile_size
+t_trace_b0_packet_qty   = $01
+t_trace_b0_bank         = vram_layer0_tilebase_b
+t_trace_b0_address      = .tile_addr
 
-t_trace !byte $00,$BC,$00,$00,$00,$00,$BC,$00
-        !byte $00,$BC,$BC,$BC,$BC,$BC,$BC,$00
-        !byte $00,$BC,$00,$00,$00,$00,$00,$00
-        !byte $00,$BC,$00,$00,$00,$00,$00,$00
-        !byte $00,$BC,$00,$BC,$BC,$BC,$BC,$00
-        !byte $00,$BC,$00,$BC,$00,$00,$BC,$00
-        !byte $BC,$BC,$BC,$BC,$00,$00,$BC,$BC
-        !byte $00,$BC,$00,$00,$00,$00,$BC,$00
+t_trace_b0      !byte $00,$BC,$00,$00,$00,$00,$BC,$00
+                !byte $00,$BC,$BC,$BC,$BC,$BC,$BC,$00
+                !byte $00,$BC,$00,$00,$00,$00,$00,$00
+                !byte $00,$BC,$00,$00,$00,$00,$00,$00
+                !byte $00,$BC,$00,$BC,$BC,$BC,$BC,$00
+                !byte $00,$BC,$00,$BC,$00,$00,$BC,$00
+                !byte $BC,$BC,$BC,$BC,$00,$00,$BC,$BC
+                !byte $00,$BC,$00,$00,$00,$00,$BC,$00
+        
+!set .tile_id   = .tile_id + $01
+!set .tile_addr = .tile_addr + .tile_size
+
+t_trace_b1_id           = .tile_id
+t_trace_b1_packet_size  = .tile_size
+t_trace_b1_packet_qty   = $01
+t_trace_b1_bank         = vram_layer0_tilebase_b
+t_trace_b1_address      = .tile_addr
+
+t_trace_b1      !byte $00,$51,$00,$00,$00,$00,$51,$00
+                !byte $00,$51,$51,$51,$51,$51,$51,$00
+                !byte $00,$51,$00,$00,$00,$00,$00,$00
+                !byte $00,$51,$00,$00,$00,$00,$00,$00
+                !byte $00,$51,$00,$51,$51,$51,$51,$00
+                !byte $00,$51,$00,$51,$00,$00,$51,$00
+                !byte $51,$51,$51,$51,$00,$00,$51,$51
+                !byte $00,$51,$00,$00,$00,$00,$51,$00
+        
+!set .tile_id   = .tile_id + $01
+!set .tile_addr = .tile_addr + .tile_size
+
+
+t_trace_b2_id           = .tile_id
+t_trace_b2_packet_size  = .tile_size
+t_trace_b2_packet_qty   = $01
+t_trace_b2_bank         = vram_layer0_tilebase_b
+t_trace_b2_address      = .tile_addr
+
+t_trace_b2      !byte $00,$35,$00,$00,$00,$00,$35,$00
+                !byte $00,$35,$35,$35,$35,$35,$35,$00
+                !byte $00,$35,$00,$00,$00,$00,$00,$00
+                !byte $00,$35,$00,$00,$00,$00,$00,$00
+                !byte $00,$35,$00,$35,$35,$35,$35,$00
+                !byte $00,$35,$00,$35,$00,$00,$35,$00
+                !byte $35,$35,$35,$35,$00,$00,$35,$35
+                !byte $00,$35,$00,$00,$00,$00,$35,$00
         
 !set .tile_id   = .tile_id + $01
 !set .tile_addr = .tile_addr + .tile_size

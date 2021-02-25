@@ -1,3 +1,5 @@
+!ifndef is_main !eof
+
 ; This file serves as paperwork of the game's design
 ; it contains variables, explications and other neat stuff
 ;
@@ -39,7 +41,7 @@ obj_idx_pos_x = $02
 obj_idx_pos_y = $03
 
 ; CONSTANTS
-HISCORE_FILE    = $01
+SAVE_FILE    = $01
 IO_DEVICE       = $08
 IOCHECK_FILE    = $02
 FILE_WRITE  = $03
@@ -56,12 +58,14 @@ GAMEOVER_WAIT_S = $03
 
 ; LOW USAGE VARIABLES
 ; $0400 to $07FF
-dynamic_string = $0400  ; 0~256 bytes
-kernal_irq = $0500      ; 2 bytes
-hiscore_87 = $0502      ; 1 byte
-hiscore_65 = $0503      ; 1 byte
-hiscore_43 = $0504      ; 1 byte
-hiscore_21 = $0505      ; 1 byte
+dynamic_string = $0400    ; 0~256 bytes
+kernal_irq   = $0500      ; 2 bytes
+hiscore_87   = $0502      ; 1 byte
+hiscore_65   = $0503      ; 1 byte
+hiscore_43   = $0504      ; 1 byte
+hiscore_21   = $0505      ; 1 byte
+saved_volume = $0506      ; 1 byte
+game_status  = $0507      ; 1 byte
 
 psg_vo_cnt   = $050F    ; 1 byte
 psg_vo_note  = $0510    ; 8 bytes
@@ -78,7 +82,7 @@ obj_table =     $0600   ; 512 bytes
 
 ; TEMPORARY VARIABLES
 ; $02 to $21
-
+volume_cooldown = x16_r2
 
 ; VARIABLES
 ; $22 to $7F
@@ -170,7 +174,9 @@ game_mode           = $7F
     ; upload tiles
     +fn_vera_upload t_empty, $10|t_empty_bank, t_empty_address, t_empty_packet_size, t_empty_packet_qty
     +fn_vera_direct_upload t_square, t_square_packet_size, t_square_packet_qty
-    +fn_vera_direct_upload t_trace, t_trace_packet_size, t_trace_packet_qty
+    +fn_vera_direct_upload t_trace_b0, t_trace_b0_packet_size, t_trace_b0_packet_qty
+    +fn_vera_direct_upload t_trace_b1, t_trace_b1_packet_size, t_trace_b1_packet_qty
+    +fn_vera_direct_upload t_trace_b2, t_trace_b2_packet_size, t_trace_b2_packet_qty
     +fn_vera_direct_upload t_scanl, t_scanl_packet_size, t_scanl_packet_qty
 
 

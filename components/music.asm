@@ -569,6 +569,18 @@ composer_end:
 ; ##########################
 
 ; ##########################
+music_clear:
+    ldy #$08
+    lda #$00
+-   sta psg_vo_volumeLo,y
+    sta psg_vo_volumeHi,y
+    sta psg_vo_mode,y
+    dey
+    bpl -
+    rts
+; ##########################
+
+; ##########################
 divide:
 	phx						; save X
     phy

@@ -4,11 +4,11 @@
 ; Original song by Vincent Foulon
 
 m_seeking:
+    !byte N_RTM, 12
     !byte N_INS, 0, I_TINY_PULSE
     !byte N_INS, 1, I_LONG_SAW
     !byte N_INS, 2, I_LONG_PULSE
     !byte N_INS, 3, I_LONG_PULSE
-    !byte N_RTM, 12
     !byte N_VOI, 1
 m_seeking_1:
     !byte N_D1
