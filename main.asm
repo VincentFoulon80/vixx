@@ -132,6 +132,11 @@ title_screen:                       ;
     +fn_locate 2, 4, str_title_2    ;  |
     +fn_locate 2, 5, str_title_3    ;  |
     +fn_locate 2, 6, str_title_4    ; /
+-   jsr sleep_one_frame             ; \
+    lda #0                          ;  |
+    jsr joystick_get                ;  |- check release start button
+    and #joystick_mask_start        ;  |
+    beq -                           ; /
 
     +fn_locate 9,16, str_press_start; )- display "press start"
 

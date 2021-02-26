@@ -177,6 +177,7 @@ game_mode           = $7F
     +fn_vera_direct_upload t_trace_b0, t_trace_b0_packet_size, t_trace_b0_packet_qty
     +fn_vera_direct_upload t_trace_b1, t_trace_b1_packet_size, t_trace_b1_packet_qty
     +fn_vera_direct_upload t_trace_b2, t_trace_b2_packet_size, t_trace_b2_packet_qty
+    +fn_vera_direct_upload t_trace_gl, t_trace_gl_packet_size, t_trace_gl_packet_qty
     +fn_vera_direct_upload t_scanl, t_scanl_packet_size, t_scanl_packet_qty
 
 

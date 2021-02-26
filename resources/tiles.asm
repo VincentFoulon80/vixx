@@ -98,6 +98,25 @@ t_trace_b2      !byte $00,$35,$00,$00,$00,$00,$35,$00
 !set .tile_addr = .tile_addr + .tile_size
 
 
+t_trace_gl_id           = .tile_id
+t_trace_gl_packet_size  = .tile_size
+t_trace_gl_packet_qty   = $01
+t_trace_gl_bank         = vram_layer0_tilebase_b
+t_trace_gl_address      = .tile_addr
+
+t_trace_gl      !byte $00,$BC,$00,$00,$00,$BC,$00,$00
+                !byte $00,$BC,$BC,$00,$BC,$BC,$BC,$00
+                !byte $00,$BC,$00,$35,$00,$00,$00,$00
+                !byte $51,$00,$00,$00,$00,$00,$00,$00
+                !byte $00,$BC,$00,$BC,$35,$00,$00,$00
+                !byte $00,$BC,$00,$BC,$00,$00,$51,$00
+                !byte $BC,$BC,$BC,$BC,$00,$00,$BC,$BC
+                !byte $00,$BC,$00,$00,$00,$00,$BC,$00
+        
+!set .tile_id   = .tile_id + $01
+!set .tile_addr = .tile_addr + .tile_size
+
+
 t_scanl_id           = .tile_id
 t_scanl_packet_size  = .tile_size
 t_scanl_packet_qty   = $01

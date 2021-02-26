@@ -452,6 +452,7 @@
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 
+!byte CHOR_OP_SBG, t_trace_gl_id
 !byte CHOR_OP_COB, $01, id_mov_Iinc, $41
 !byte CHOR_OP_LDA, $20
 .lvl2_boss1_lp:

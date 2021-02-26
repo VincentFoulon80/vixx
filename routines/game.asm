@@ -207,6 +207,10 @@ init_game:                  ;
     jsr refresh_panics      ; /
     lda #player_spid        ; \_ reset player sprite
     jsr change_player_sprite; /
+    ldx #$01                ; \
+    ldy #$01                ;  |- reset virus's sprite
+    lda #virus1_spid        ;  |
+    jsr change_obj_sprite   ; /
     ldx #$02                ; \
     ldy #$7D                ;  |- reset bullet sprite
     lda #bullet_spid        ;  |
