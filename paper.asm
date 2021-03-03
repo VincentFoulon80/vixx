@@ -52,7 +52,17 @@ WFRAME_MOVE = %00000001
 WFRAME_CHOR = %00000010
 WFRAME_MUSIC= %00000100
 
-GRAZE_BONUS = $01
+DIFFICULTY_EASY     = $00
+DIFFICULTY_NORMAL   = $01
+DIFFICULTY_HARD     = $02
+
+STATUS_FINISHED_EASY    = %00000001
+STATUS_FINISHED_NORMAL  = %00000010
+STATUS_FINISHED_HARD    = %00000100
+
+GRAZE_BONUS_EASY    = $01
+GRAZE_BONUS_NORMAL  = $02
+GRAZE_BONUS_HARD    = $04
 INVINCIBILITY_FRAMES = $3C
 GAMEOVER_WAIT_S = $03
 
@@ -136,6 +146,8 @@ sfx_change      = $4F
 music_volume    = $50
 sfx_volume      = $51
 
+difficulty          = $70
+graze_bonus       = $71
 score_over_time     = $72
 scroll_speed        = $73
 invincibility_cnt   = $74
@@ -273,4 +285,6 @@ game_mode           = $7F
     sta music_volume                    ;  |- init global volume
     lda #63                             ;  |
     sta sfx_volume                      ; /
+    lda #DIFFICULTY_NORMAL              ; \_ init default difficulty
+    sta difficulty                      ; /
 }

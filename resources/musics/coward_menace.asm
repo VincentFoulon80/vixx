@@ -6,7 +6,7 @@
 m_cowardmenace:
     !byte N_RTM, 15
     !byte N_INS, 0, I_TINY_PULSE
-    !byte N_INS, 1, I_TINY_NOISE
+    !byte N_INS, 1, I_TINY_LOW_NOISE
     !byte N_INS, 2, I_LONG_PULSE
     !byte N_VOI, 2
 m_cowardmenace_1:
@@ -68,12 +68,6 @@ m_cowardmenace_12:
     !byte N_GNP
     !byte N_GNP
     !byte N_GNP
-
-m_cowardmenace_13:
-    !byte N_JMP, <music_idle, >music_idle
-    !byte N_INS, 0, I_SHORT_PULSE
-    !byte N_VOI, 3
-    !byte N_JMS, <m_cowardmenace_b5, >m_cowardmenace_b5
 
 m_cowardmenace_end:
     !byte N_JMP, <music_idle, >music_idle

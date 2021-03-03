@@ -196,15 +196,13 @@ init_game:                  ;
     sta lives               ;  |- reset lives & panics
     lda #$03                ;  |
     sta panics              ; /
+    lda #GRAZE_BONUS_NORMAL ; \_ set graze bonus
+    sta graze_bonus         ; /
     stz score_87            ; \
     stz score_65            ;  |- reset score
     stz score_43            ;  |
     stz score_21            ; /
     jsr reset_objects       ; )- reset objects
-    jsr refresh_hiscore     ; \
-    jsr refresh_score       ;  |- reset ui
-    jsr refresh_lives       ;  |
-    jsr refresh_panics      ; /
     lda #player_spid        ; \_ reset player sprite
     jsr change_player_sprite; /
     ldx #$01                ; \
@@ -215,6 +213,25 @@ init_game:                  ;
     ldy #$7D                ;  |- reset bullet sprite
     lda #bullet_spid        ;  |
     jsr change_obj_sprite   ; /
+    lda difficulty          ; \
+    cmp #DIFFICULTY_EASY    ;  |- handle EASY parameters
+    bne +                   ;  |
+    lda #$09                ;  |
+    sta lives               ;  |
+    lda #$08                ;  |
+    sta panics              ;  |
+    lda #GRAZE_BONUS_EASY   ;  |
+    sta graze_bonus         ; /
++   cmp #DIFFICULTY_HARD    ; \
+    bne +                   ;  |- handle HARD parameters
+    lda #GRAZE_BONUS_HARD   ;  |
+    sta graze_bonus         ; /
++
+init_game_ui:
+    jsr refresh_hiscore     ; \
+    jsr refresh_score       ;  |- reset ui
+    jsr refresh_lives       ;  |
+    jsr refresh_panics      ; /
     rts                     ;
 ; ###########################
 
@@ -370,20 +387,26 @@ handle_touched:
 player_touched:             ;
     lda #INVINCIBILITY_FRAMES;\_ set invincibility frames
     sta invincibility_cnt   ; /
-    lda #touched_player_spid;
-    jsr change_player_sprite;
-    lda #<game_sfx_touched
-    sta x16_r0_l
-    lda #>game_sfx_touched
-    sta x16_r0_h
-    jsr play_sfx
-    dec lives               ; \
-    bne +                   ;  |- decrease lives, and handle gameover
-    sec
-    rts
-+   jsr refresh_lives       ; )- refresh live counter 
-    clc
-    rts                     ;
+    lda #touched_player_spid; \_ set player's sprite
+    jsr change_player_sprite; /
+    lda #<game_sfx_touched  ; \
+    sta x16_r0_l            ;  |- play the "touched" sfx
+    lda #>game_sfx_touched  ;  |
+    sta x16_r0_h            ;  |
+    jsr play_sfx            ; /
+    dec lives               ;
+    bne +                   ;
+    sec                     ; \_ return with GAMEOVER
+    rts                     ; /
++   jsr refresh_lives       ; )- refresh lives counter 
+    lda panics              ; \
+    cmp #$03                ;  |- if panics < 3 reset them to 3
+    bpl +                   ;  |
+    lda #$03                ;  |
+    sta panics              ;  |
+    jsr refresh_panics      ; /
++   clc                     ; \_ return
+    rts                     ; /
 ; ###########################
 
 ; ###########################
@@ -479,7 +502,7 @@ handle_graze:
     cmp #$F7                ;  |
     bcc .grazed_end         ; /
 .grazed_xy:                 ;
-    lda #GRAZE_BONUS        ; \
+    lda graze_bonus         ; \
     ldx #$00                ;  |- graze scoring
     ldy #$00                ;  |
     jsr add_to_score        ; /
@@ -500,12 +523,32 @@ add_to_score:
     tya                     ; \
     adc score_65            ;  |- follow the 2 next digit
     sta score_65            ; /
-    lda score_87            ; \
-    adc #$00                ;  |- finally follow the last 2 digit
-    sta score_87            ; /
-    cld                     ; )- reset back to binary
+    bcc +                   ;
+    jsr inc_lives           ; )- grant a life when hitting X000000 points
+    inc score_87            ; )- finally follow the last 2 digit
++   cld                     ; )- reset back to binary
     jsr refresh_score       ; )- refresh scores on screen
     rts
+; ###########################
+
+; ###########################
+inc_lives:
+    lda #$09                    ; \
+    cmp lives                   ;  |- max 9
+    beq +                       ; /
+    inc lives                   ;
+    jsr refresh_lives           ;)- refresh lives on screen
++   rts
+; ###########################
+
+; ###########################
+inc_panics:
+    lda #$08                    ; \
+    cmp panics                  ;  |- max 8
+    beq +                       ; /
+    inc panics                  ;
+    jsr refresh_panics          ;)- refresh panics on screen
++   rts
 ; ###########################
 
 ; ###########################

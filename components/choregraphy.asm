@@ -10,9 +10,9 @@ CHOR_OP_ISP = $03 ; INSert at Position      : pos_x, pos_y, type, param
 CHOR_OP_SPS = $04 ; Set PoSition (absolute) : pos_x, pos_y
 CHOR_OP_MPS = $05 ; Move PoSition (relative): delta_x, delta_y
 CHOR_OP_FPS = $06 ; Fast Move Position (rel): delta_xy
-CHOR_OP_SRX = $07 ; Set Random X position   ;
-CHOR_OP_SRY = $08 ; Set Random Y position   ;
-CHOR_OP_SEK = $09 ; SEeK object position    ; obj_id
+CHOR_OP_SRX = $07 ; Set Random X position   :
+CHOR_OP_SRY = $08 ; Set Random Y position   :
+CHOR_OP_SEK = $09 ; SEeK object position    : obj_id
 
 CHOR_OP_PRT = $20 ; PRinT text              : pos_x, pos_y, str_addr_l, str_addr_h
 CHOR_OP_PRD = $21 ; PRint Direct mode       : pos_x, pos_y, ...null_terminated_str
@@ -41,14 +41,16 @@ CHOR_OP_LIF = $B2 ; Give a life             ;
 CHOR_OP_PNC = $B3 ; Give a panic            ; 
 
 CHOR_OP_JMP = $E0 ; JuMP to address         : addr_l, addr_h
-CHOR_OP_JAZ = $E1 ; Jump If regA is Zero    : addr_l, addr_h
-CHOR_OP_JAN = $E2 ; Jump If regA is Not zero: addr_l, addr_h
-CHOR_OP_JBZ = $E3 ; Jump If regB is Zero    : addr_l, addr_h
-CHOR_OP_JBN = $E4 ; Jump If regB is Not zero: addr_l, addr_h
-CHOR_OP_JCZ = $E5 ; Jump If regC is Zero    : addr_l, addr_h
-CHOR_OP_JCN = $E6 ; Jump If regC is Not zero: addr_l, addr_h
+CHOR_OP_JAZ = $E1 ; Jump if regA is Zero    : addr_l, addr_h
+CHOR_OP_JAN = $E2 ; Jump if regA is Not zero: addr_l, addr_h
+CHOR_OP_JBZ = $E3 ; Jump if regB is Zero    : addr_l, addr_h
+CHOR_OP_JBN = $E4 ; Jump if regB is Not zero: addr_l, addr_h
+CHOR_OP_JCZ = $E5 ; Jump if regC is Zero    : addr_l, addr_h
+CHOR_OP_JCN = $E6 ; Jump if regC is Not zero: addr_l, addr_h
 CHOR_OP_JXZ = $E7 ; Jump if posX is Zero    : addr_l, addr_h
 CHOR_OP_JYZ = $E8 ; Jump if posY is Zero    : addr_l, addr_h
+CHOR_OP_JEM = $E9 ; Jump if Easy Mode       : addr_l, addr_h
+CHOR_OP_JHM = $EA ; Jump if Hard Mode       : addr_l, addr_h
 
 CHOR_OP_EXC = $FF ; EXeCute code            : address_l, address_y
 
@@ -371,27 +373,35 @@ run_choregraphy:
     cmp #CHOR_OP_SOT                ; \
     bne +                           ;  |- SET SCORE OVER TIME ( score )
         jsr .chor_next_byte         ;  |
-        sta score_over_time         ;  |
+        tax                         ;  |
+        lda difficulty              ;  |
+        cmp #DIFFICULTY_EASY        ;  | \_ check if difficulty = easy
+        beq .op_sot_easy            ;  | /
+        cmp #DIFFICULTY_HARD        ;  | \_ check if difficulty = normal
+        bne .op_sot_normal          ;  | /
+        txa                         ;  | \
+        asl                         ;  |  |- handle hard mode (score x2)
+        bcc .op_sot_store           ;  |  |
+        lda #$FF                    ;  |  | \_ max 255
+        bra .op_sot_store           ;  | /  /
+    .op_sot_normal:                 ;  | \_ handle normal mode (score x1)
+        txa                         ;  | /
+    .op_sot_store:                  ;  | \
+        sta score_over_time         ;  |  |- store score_over_time
+        bra .op_sot_end             ;  | /
+    .op_sot_easy:                   ;  | \_ handle easy mode (score x0)
+        stz score_over_time         ;  | /
+        .op_sot_end:                ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_LIF                ; \
     bne +                           ;  |- GIVE A LIFE ()
-        lda #$08                    ;  | \
-        cmp lives                   ;  |  |- max 8
-        beq .op_lif_end             ;  | /
-        inc lives                   ;  |
-        jsr refresh_lives           ;  |
-        .op_lif_end:                ;  |
+        jsr inc_lives               ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_PNC                ; \
     bne +                           ;  |- GIVE A PANIC ()
-        lda #$08                    ;  | \
-        cmp panics                  ;  |  |- max 8
-        beq .op_pnc_end             ;  | /
-        inc panics                  ;  |
-        jsr refresh_panics          ;  |
-        .op_pnc_end:                ;  |
+        jsr inc_panics              ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_JMP                ; \
@@ -400,8 +410,7 @@ run_choregraphy:
         tax                         ;  |
         jsr .chor_next_byte         ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_JAZ                ; \
@@ -412,8 +421,7 @@ run_choregraphy:
         ldy choregraphy_reg_a       ;  |
         bne .op_jaz_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jaz_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -425,8 +433,7 @@ run_choregraphy:
         ldy choregraphy_reg_a       ;  |
         beq .op_jan_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jan_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -438,8 +445,7 @@ run_choregraphy:
         ldy choregraphy_reg_b       ;  |
         bne .op_jbz_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jbz_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -451,8 +457,7 @@ run_choregraphy:
         ldy choregraphy_reg_b       ;  |
         beq .op_jbn_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jbn_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -464,8 +469,7 @@ run_choregraphy:
         ldy choregraphy_reg_c       ;  |
         bne .op_jbz_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jcz_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -477,8 +481,7 @@ run_choregraphy:
         ldy choregraphy_reg_c       ;  |
         beq .op_jbn_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jcn_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -490,8 +493,7 @@ run_choregraphy:
         ldy choregraphy_pos_x       ;  |
         bne .op_jxz_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jxz_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -503,9 +505,36 @@ run_choregraphy:
         ldy choregraphy_pos_y       ;  |
         bne .op_jyz_end             ;  |
         sta choregraphy_pc_h        ;  |
-        txa                         ;  |
-        sta choregraphy_pc_l        ;  |
+        stx choregraphy_pc_l        ;  |
         .op_jyz_end:                ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_JEM                ; \
+    bne +                           ;  |- JUMP IF EASY MODE ( addr_l addr_h )
+        jsr .chor_next_byte         ;  |
+        tax                         ;  |
+        jsr .chor_next_byte         ;  |
+        tay                         ;  |
+        lda difficulty              ;  |
+        cmp #DIFFICULTY_EASY        ;  |
+        bne .op_jem_end             ;  |
+        sty choregraphy_pc_h        ;  |
+        stx choregraphy_pc_l        ;  |
+        .op_jem_end:                ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_JHM                ; \
+    bne +                           ;  |- JUMP IF HARD MODE ( addr_l addr_h )
+        jsr .chor_next_byte         ;  |
+        tax                         ;  |
+        jsr .chor_next_byte         ;  |
+        tay                         ;  |
+        lda difficulty              ;  |
+        cmp #DIFFICULTY_HARD        ;  |
+        bne .op_jhm_end             ;  |
+        sty choregraphy_pc_h        ;  |
+        stx choregraphy_pc_l        ;  |
+        .op_jhm_end:                ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_EXC                ; \

@@ -1,7 +1,6 @@
 !ifndef is_main !eof
 
 .lvl2_start:
-; insert player
 !byte CHOR_OP_MUS, <m_datarain, >m_datarain
 !byte CHOR_OP_SPR, $02, $7D, bullet_spid
 !byte CHOR_OP_SPS, $00, $FF
@@ -444,7 +443,7 @@
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_MOB, $01, $6D, $00
 !byte CHOR_OP_COB, $01, id_mov_incr, $01
-!byte CHOR_OP_MUS, <m_cowardmenace, >m_cowardmenace
+!byte CHOR_OP_MUS, <m_cowardmenace2, >m_cowardmenace2
 !byte CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_COB, $01, id_mov_incr, $00

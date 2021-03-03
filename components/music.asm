@@ -629,18 +629,20 @@ I_LONG_SAW      = $00
 I_LONG_PULSE    = $01
 I_LONG_TRIANGLE = $02
 I_TINY_SAW      = $03
-I_TINY_NOISE    = $04
+I_TINY_LOW_NOISE= $04
 I_TINY_PULSE    = $05
 I_SHORT_PULSE   = $06
+I_TINY_NOISE    = $07
 
 instrument_def:
     !byte vera_psg_waveform_sawtooth,   $22, $AE, 0, 63, 63, vera_psg_left|vera_psg_right, 0
     !byte vera_psg_waveform_pulse,      $22, $AE, 0, 63, 63, vera_psg_left|vera_psg_right, 0
     !byte vera_psg_waveform_triangle,   $22, $AE, 0, 63, 63, vera_psg_left|vera_psg_right, 0
     !byte vera_psg_waveform_sawtooth,   $22, $51, 0, 63, 63, vera_psg_left|vera_psg_right, 0
-    !byte vera_psg_waveform_noise,      $22, $05, 0, 63, 63, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_noise,      $22, $51, 0, 63, 55, vera_psg_left|vera_psg_right, 0
     !byte vera_psg_waveform_pulse,      $22, $05, 0, 63, 63, vera_psg_left|vera_psg_right, 0
     !byte vera_psg_waveform_pulse,      $22, $81, 0, 63, 63, vera_psg_left|vera_psg_right, 0
+    !byte vera_psg_waveform_noise,      $22, $55, 0, 63, 55, vera_psg_left|vera_psg_right, 0
 
 durations:
     !byte 0

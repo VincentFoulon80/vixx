@@ -141,9 +141,22 @@ title_screen:                       ;
     +fn_locate 9,16, str_press_start; )- display "press start"
 
     +fn_locate 8,24, str_volume_ctrl; )- display volume controls
+
+    +fn_locate 6,21, str_difficulty ; )- display difficulty setting
     
     stz x16_r0                      ; )- clear r0
-display_volume_bar:
+refresh_ui:
+    lda difficulty                  ; \
+    cmp #DIFFICULTY_EASY            ;  |- check current difficulty setting
+    bne +                           ;  |
+    +fn_locate 11,22,str_diff_easy  ;  | )- write "easy"
+    bra refresh_volume
++   cmp #DIFFICULTY_HARD            ;  |
+    bne +                           ;  |
+    +fn_locate 11,22,str_diff_hard  ;  | )- write "hard"
+    bra refresh_volume
++   +fn_locate 11,22,str_diff_normal; /  )- write "normal"
+refresh_volume:
     +fn_locate 1,25,str_ui_volume   ; \_ draw the volume UI
     +fn_plot 10,25                  ; /
     lda music_volume                ; \
@@ -195,6 +208,18 @@ title_wait_start:
     sec                             ;  |  |
     sbc #$08                        ;  |  |
     bra title_update_volume         ;  | /
++   tya
+    and #joystick_mask_left
+    bne +
+    lda difficulty
+    dec
+    bra title_update_difficulty
++   tya
+    and #joystick_mask_right
+    bne +
+    lda difficulty
+    inc
+    bra title_update_difficulty
 +   stz volume_cooldown             ;  | \
     tya                             ;  |  |- check for joystick START
     and #joystick_mask_start        ;  |  |  start the game
@@ -219,7 +244,34 @@ title_update_volume:
     lda #>game_sfx_pause            ;  |  |  to give a sample to the user
     sta x16_r0_h                    ;  |  |
     jsr play_sfx                    ;  | /
-    jmp display_volume_bar          ; /
+    jmp refresh_volume              ; /
+title_update_difficulty:
+    tax                             ; \
+    lda volume_cooldown             ;  |
+    beq +                           ;  |- updates difficulty, uses r2 as temporary cooldown
+    jmp title_wait_start            ;  |
++   txa                             ;  |
+    bpl +                           ;  | \_ lower limit ($00)
+    lda #$00                        ;  | /
++   cmp #$03                        ;  | \
+    bmi +                           ;  |  |- upper limit ($02)
+    lda #$02                        ;  | /
++   tax
+    lda game_status
+    and #STATUS_FINISHED_NORMAL
+    bne +
+    cpx #$02
+    bne +
+    ldx #$01
++   stx difficulty                  ;  |
+    lda #$05                        ;  |
+    sta volume_cooldown             ;  |
+    lda #<game_sfx_pause            ;  | \
+    sta x16_r0_l                    ;  |  |- play the "pause" sfx
+    lda #>game_sfx_pause            ;  |  |  to give a sample to the user
+    sta x16_r0_h                    ;  |  |
+    jsr play_sfx                    ;  | /
++   jmp refresh_ui                  ; /
 
 title_started:
     ; game started
@@ -229,6 +281,8 @@ title_started:
     +fn_locate 1,5, str_ui_game     ;  |
     +fn_locate 1,6, str_ui_game     ;  |
     +fn_locate 1,16,str_ui_game     ;  |
+    +fn_locate 1,21,str_ui_game     ;  |
+    +fn_locate 1,22,str_ui_game     ;  |
     +fn_locate 1,24,str_ui_game     ;  |
     +fn_locate 1,25,str_ui_game     ; /
 
@@ -733,8 +787,11 @@ music_idle_lp:
     !byte N_JMP, <music_idle_lp, >music_idle_lp
 
 !src "resources/musics/coward_menace.asm"
+!src "resources/musics/coward_menace2.asm"
+!src "resources/musics/coward_menace3.asm"
 !src "resources/musics/seeking.asm"
 !src "resources/musics/data_rain.asm"
+!src "resources/musics/moving_bytes.asm"
 
 choregraphy_start:
 !byte CHOR_OP_SPS, $6F, $C7
@@ -743,6 +800,7 @@ choregraphy_start:
 !byte CHOR_OP_INS, id_mov_incr, $00
 !src "resources/levels/1-filesystem.asm"
 !src "resources/levels/2-high-ram.asm"
+!src "resources/levels/3-low-ram.asm"
 
 ; force virus out
 !byte CHOR_OP_SPS, $00, $FF

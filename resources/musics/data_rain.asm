@@ -144,7 +144,7 @@ m_datarain_19:
     !byte N_JMS, <m_datarain_s8, >m_datarain_s8
 m_datarain_20:
     !byte N_VOI, 4
-    !byte N_INS, 2, I_TINY_NOISE
+    !byte N_INS, 2, I_TINY_LOW_NOISE
     !byte N_INS, 3, I_LONG_PULSE
     !byte N_JMS, <m_datarain_s4, >m_datarain_s4
     !byte N_JMS, <m_datarain_s4, >m_datarain_s4
@@ -216,7 +216,7 @@ m_datarain_38:
 m_datarain_39:
     !byte N_VOI, 3
     !byte N_INS, 0, I_LONG_PULSE
-    !byte N_INS, 1, I_TINY_NOISE
+    !byte N_INS, 1, I_TINY_LOW_NOISE
     !byte N_INS, 2, I_LONG_PULSE
     !byte N_D2, N_D5, N_D4
     !byte N_GNP
@@ -255,7 +255,7 @@ m_datarain_42:
     !byte N_STP,N_NOP,N_STP
 m_datarain_43:
     !byte N_VOI, 2
-    !byte N_INS, 0, I_TINY_NOISE
+    !byte N_INS, 0, I_TINY_LOW_NOISE
     !byte N_INS, 1, I_LONG_PULSE
     !byte N_D5, N_D3
     !byte N_GNP
