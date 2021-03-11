@@ -45,7 +45,10 @@
 !byte CHOR_OP_SCR, $04
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SLP, $3C
-;!byte CHOR_OP_JMP, <.lvl2_start, >.lvl2_start
+
+;
+; initial throw
+;
 
 .lvl1_s1:
 !byte CHOR_OP_LDA, $06
@@ -63,6 +66,10 @@
 !pet CHOR_OP_PRD, 15,5,"          ", PET_NULL
 !byte CHOR_OP_SLP, $78
 
+;
+; spawn bullets making a static diagonal
+;
+
 .lvl1_s2:
 !byte CHOR_OP_SPS, $20, $20
 !byte CHOR_OP_LDA, $0B
@@ -77,6 +84,10 @@
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_JAN, <.lvl1_s2_lp, >.lvl1_s2_lp
 
+;
+; cut the screen with diagonals
+;
+
 .lvl1_s3:
 !byte CHOR_OP_SPS, $02, $02
 !byte CHOR_OP_LDA, $18
@@ -85,9 +96,20 @@
 !byte CHOR_OP_BIS, 2
     !byte id_mov_incr, $12
     !byte id_mov_incr, $22
+!byte CHOR_OP_JNH, <.lvl1_s3_md, >.lvl1_s3_md
+!byte CHOR_OP_SPS, $E6, $02
+!byte CHOR_OP_BIS, 2
+    !byte id_mov_dcic, $12
+    !byte id_mov_dcic, $22
+!byte CHOR_OP_SPS, $02, $02
+.lvl1_s3_md:
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_JAN, <.lvl1_s3_lp, >.lvl1_s3_lp
+
+;
+; "explosions" in the center
+;
 
 .lvl1_s4:
 !byte CHOR_OP_SPS, $6F, $20
@@ -130,6 +152,10 @@
 !byte CHOR_OP_JAN, <.lvl1_s4_blk, >.lvl1_s4_blk
 !byte CHOR_OP_SCR, $07
 
+;
+; flying, slow
+;
+
 .lvl1_s5:
 !byte CHOR_OP_LDA, $20
 !byte CHOR_OP_SPS, $00, $01
@@ -146,6 +172,10 @@
 !byte CHOR_OP_SCR, $05
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $08
+
+;
+; flying, faster
+;
 
 .lvl1_s6:
 !byte CHOR_OP_LDA, $20
@@ -166,6 +196,10 @@
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $0C
 
+;
+; flying, fastest
+;
+
 .lvl1_s7:
 !byte CHOR_OP_LDA, $20
 !byte CHOR_OP_SPS, $00, $01
@@ -184,6 +218,10 @@
 !byte CHOR_OP_SCR, $0D
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $10
+
+;
+; flying, max speed
+;
 
 .lvl1_s8:
 !byte CHOR_OP_LDA, $30
