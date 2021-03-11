@@ -50,8 +50,6 @@
 
 !byte CHOR_OP_SPS, $6F, $01
 
-!byte CHOR_OP_JMP, <.lvl3_boss1, >.lvl3_boss1
-
 ;
 ; rain of static obj
 ;

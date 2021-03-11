@@ -793,13 +793,13 @@ music_idle_lp:
 !src "resources/musics/data_rain.asm"
 !src "resources/musics/moving_bytes.asm"
 
-!src "resources/levels/1-filesystem.asm"
-!src "resources/levels/2-high-ram.asm"
 choregraphy_start:
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
 !byte CHOR_OP_SPS, $00, $FF
 !byte CHOR_OP_INS, id_mov_incr, $00
+!src "resources/levels/1-filesystem.asm"
+!src "resources/levels/2-high-ram.asm"
 !src "resources/levels/3-low-ram.asm"
 
 ; force virus out
