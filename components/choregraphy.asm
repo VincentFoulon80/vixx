@@ -13,6 +13,8 @@ CHOR_OP_FPS = $06 ; Fast Move Position (rel): delta_xy
 CHOR_OP_SRX = $07 ; Set Random X position   :
 CHOR_OP_SRY = $08 ; Set Random Y position   :
 CHOR_OP_SEK = $09 ; SEeK object position    : obj_id
+CHOR_OP_SKX = $0A ; SeeK object X position  : obj_id
+CHOR_OP_SKY = $0B ; SeeK object Y position  : obj_id
 
 CHOR_OP_PRT = $20 ; PRinT text              : pos_x, pos_y, str_addr_l, str_addr_h
 CHOR_OP_PRD = $21 ; PRint Direct mode       : pos_x, pos_y, ...null_terminated_str
@@ -32,8 +34,11 @@ CHOR_OP_INC = $37 ; INcrement regC          :
 CHOR_OP_DEC = $38 ; DEcregment regC         :
 
 CHOR_OP_SPR = $A0 ; change SPRite           ; from, count, spid
-CHOR_OP_MOB = $A1 ; Move OBject             ; obj_id, pos_x, pos_y
-CHOR_OP_COB = $A2 ; Configure OBject        ; obj_id, type, param
+CHOR_OP_MOJ = $A1 ; Move OBject             ; obj_id, pos_x, pos_y
+CHOR_OP_MOA = $A2 ; Move Object on A        ; offset, type, param
+CHOR_OP_COJ = $A3 ; Configure OBject        ; obj_id, type, param
+CHOR_OP_COA = $A4 ; Configure Object on A   ; offset, type, param
+CHOR_OP_CMO = $A5 ; Config. Multiple Objects; from, count, type, param
 
 CHOR_OP_SCO = $B0 ; SCOre points            ; XX0000,XX00,XX
 CHOR_OP_SOT = $B1 ; set Score Over Time     ; score
@@ -47,10 +52,10 @@ CHOR_OP_JBZ = $E3 ; Jump if regB is Zero    : addr_l, addr_h
 CHOR_OP_JBN = $E4 ; Jump if regB is Not zero: addr_l, addr_h
 CHOR_OP_JCZ = $E5 ; Jump if regC is Zero    : addr_l, addr_h
 CHOR_OP_JCN = $E6 ; Jump if regC is Not zero: addr_l, addr_h
-CHOR_OP_JXZ = $E7 ; Jump if posX is Zero    : addr_l, addr_h
-CHOR_OP_JYZ = $E8 ; Jump if posY is Zero    : addr_l, addr_h
-CHOR_OP_JEM = $E9 ; Jump if Easy Mode       : addr_l, addr_h
-CHOR_OP_JHM = $EA ; Jump if Hard Mode       : addr_l, addr_h
+CHOR_OP_JRN = $E7 ; Jump RaNdomly           : addr_l, addr_h
+CHOR_OP_JEM = $E8 ; Jump if Easy Mode       : addr_l, addr_h
+CHOR_OP_JNE = $E9 ; Jump if Not Easy mode   : addr_l, addr_h
+CHOR_OP_JNH = $EA ; Jump if Not Hard mode   : addr_l, addr_h
 
 CHOR_OP_EXC = $FF ; EXeCute code            : address_l, address_y
 
@@ -186,6 +191,52 @@ run_choregraphy:
         sta choregraphy_pos_y   ;  |
     jmp .chor_end               ; /
 +
+    cmp #CHOR_OP_SKX            ; \
+    bne +                       ;  |- SEEK OBJECT X POSITION ( obj_id )
+        stz x16_r0_l            ;  |
+        stz x16_r0_h            ;  |
+        jsr .chor_next_byte     ;  | \
+        tax                     ;  |  |
+        beq .op_skx_skip        ;  |  |
+        -   clc                 ;  |  |
+            +adc16 x16_r0, $04  ;  |  |- find the object's address
+            dex                 ;  |  |
+            bne -               ;  | /
+        .op_skx_skip:           ;  |
+        lda #<obj_table+2       ;  | \
+        clc                     ;  |  |
+        adc x16_r0_l            ;  |  |- load the object address into
+        sta x16_r0_l            ;  |  |  x16_r0
+        lda #>obj_table         ;  |  |
+        adc x16_r0_h            ;  |  |
+        sta x16_r0_h            ;  | /
+        lda (x16_r0_l)          ;  |
+        sta choregraphy_pos_x   ;  |
+    jmp .chor_end               ; /
++
+    cmp #CHOR_OP_SKY            ; \
+    bne +                       ;  |- SEEK OBJECT Y POSITION ( obj_id )
+        stz x16_r0_l            ;  |
+        stz x16_r0_h            ;  |
+        jsr .chor_next_byte     ;  | \
+        tax                     ;  |  |
+        beq .op_sky_skip        ;  |  |
+        -   clc                 ;  |  |
+            +adc16 x16_r0, $04  ;  |  |- find the object's address
+            dex                 ;  |  |
+            bne -               ;  | /
+        .op_sky_skip:           ;  |
+        lda #<obj_table+3       ;  | \
+        clc                     ;  |  |
+        adc x16_r0_l            ;  |  |- load the object address into
+        sta x16_r0_l            ;  |  |  x16_r0
+        lda #>obj_table         ;  |  |
+        adc x16_r0_h            ;  |  |
+        sta x16_r0_h            ;  | /
+        lda (x16_r0_l)          ;  |
+        sta choregraphy_pos_y   ;  |
+    jmp .chor_end               ; /
++
     cmp #CHOR_OP_PRT                ; \
     bne +                           ;  |- PRINT TEXT ( pos_x, pos_y, str_addr_l, str_addr_h )
         +fn_print str_white_on_black;  |
@@ -312,12 +363,14 @@ run_choregraphy:
         jsr change_obj_sprite       ;  |
     jmp .chor_end                   ; /
 +
-    cmp #CHOR_OP_MOB                ; \
+    cmp #CHOR_OP_MOJ                ; \
     bne +                           ;  |- MOVE OBJECT ( obj_id, pos_y, pos_x )
         stz x16_r0_l                ;  |
         stz x16_r0_h                ;  |
         jsr .chor_next_byte         ;  | \
+    .op_moj_entry:                  ;  |  |
         tax                         ;  |  |
+        and #$7F                    ;  |  | )- limit to 127 first
         -   clc                     ;  |  |
             +adc16 x16_r0, $04      ;  |  |- find the object's address
             dex                     ;  |  |
@@ -336,11 +389,23 @@ run_choregraphy:
         sta (x16_r0_l)              ;  | /
     jmp .chor_end                   ; /
 +
-    cmp #CHOR_OP_COB                ; \
+    cmp #CHOR_OP_MOA                ; \
+    bne +                           ;  |- MOVE OBJECT ON A ( offset, type, param )
+        stz x16_r0_l                ;  |
+        stz x16_r0_h                ;  |
+        jsr .chor_next_byte         ;  |
+        clc                         ;  |
+        adc choregraphy_reg_a       ;  |
+        bra .op_moj_entry           ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_COJ                ; \
     bne +                           ;  |- CONFIGURE OBJECT ( obj_id, type, param )
         stz x16_r0_l                ;  |
         stz x16_r0_h                ;  |
         jsr .chor_next_byte         ;  | \
+    .op_coj_entry:                  ;  |  |
+        and #$7F                    ;  |  | )- limit to 127 first
         tax                         ;  |  |
         -   clc                     ;  |  |
             +adc16 x16_r0, $04      ;  |  |- find the object's address
@@ -358,6 +423,51 @@ run_choregraphy:
         +inc16 x16_r0               ;  |  |
         jsr .chor_next_byte         ;  |  |
         sta (x16_r0_l)              ;  | /
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_COA                ; \
+    bne +                           ;  |- CONFIGURE OBJECT ON A ( offset, type, param )
+        stz x16_r0_l                ;  |
+        stz x16_r0_h                ;  |
+        jsr .chor_next_byte         ;  |
+        clc                         ;  |
+        adc choregraphy_reg_a       ;  |
+        bra .op_coj_entry           ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_CMO                ; \
+    bne +                           ;  |- CONFIGURE MULTIPLE OBJECTS ( from, count, type, param )
+        stz x16_r0_l                ;  |
+        stz x16_r0_h                ;  |
+        jsr .chor_next_byte         ;  | \
+        and #$7F                    ;  |  | )- limit to 127 first
+        tax                         ;  |  |
+        -   clc                     ;  |  |
+            +adc16 x16_r0, $04      ;  |  |- find the first object address
+            dex                     ;  |  |
+            bne -                   ;  | /
+        jsr .chor_next_byte         ;  | \_ load count in Y
+        tay                         ;  | /
+        lda #<obj_table             ;  | \
+        clc                         ;  |  |
+        adc x16_r0_l                ;  |  |- load the object address into
+        sta x16_r0_l                ;  |  |  x16_r0
+        lda #>obj_table             ;  |  |
+        adc x16_r0_h                ;  |  |
+        sta x16_r0_h                ;  | /
+        jsr .chor_next_byte         ;  | \
+        sta x16_r1_l                ;  |  |- load configuration into x16_r1
+        jsr .chor_next_byte         ;  |  |
+        sta x16_r1_h                ;  | /
+-           lda x16_r1_l            ;  | \  \
+            sta (x16_r0_l)          ;  |  |  |- configure the object
+            +inc16 x16_r0           ;  |  |  |
+            lda x16_r1_h            ;  |  |  |
+            sta (x16_r0_l)          ;  |  | /
+            clc                     ;  |  |
+            +adc16 x16_r0, $03      ;  |  |- loop through every objects
+            dey                     ;  |  |
+            bne -                   ;  | /
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_SCO                ; \
@@ -485,28 +595,19 @@ run_choregraphy:
         .op_jcn_end:                ;  |
     jmp .chor_end                   ; /
 +
-    cmp #CHOR_OP_JXZ                ; \
-    bne +                           ;  |- JUMP WHEN POS X IS ZERO ( addr_l addr_h )
+    cmp #CHOR_OP_JRN                ; \
+    bne +                           ;  |- JUMP RANDOMLY ( addr_l addr_h )
         jsr .chor_next_byte         ;  |
         tax                         ;  |
         jsr .chor_next_byte         ;  |
-        ldy choregraphy_pos_x       ;  |
-        bne .op_jxz_end             ;  |
+        pha                         ;  |
+        jsr rng                     ;  |
+        cmp #$00                    ;  |
+        bmi .op_jrn_end             ;  |
+        pla                         ;  |
         sta choregraphy_pc_h        ;  |
         stx choregraphy_pc_l        ;  |
-        .op_jxz_end:                ;  |
-    jmp .chor_end                   ; /
-+
-    cmp #CHOR_OP_JYZ                ; \
-    bne +                           ;  |- JUMP WHEN POS Y IS ZERO ( addr_l addr_h )
-        jsr .chor_next_byte         ;  |
-        tax                         ;  |
-        jsr .chor_next_byte         ;  |
-        ldy choregraphy_pos_y       ;  |
-        bne .op_jyz_end             ;  |
-        sta choregraphy_pc_h        ;  |
-        stx choregraphy_pc_l        ;  |
-        .op_jyz_end:                ;  |
+        .op_jrn_end:                ;  |
     jmp .chor_end                   ; /
 +
     cmp #CHOR_OP_JEM                ; \
@@ -523,15 +624,29 @@ run_choregraphy:
         .op_jem_end:                ;  |
     jmp .chor_end                   ; /
 +
-    cmp #CHOR_OP_JHM                ; \
-    bne +                           ;  |- JUMP IF HARD MODE ( addr_l addr_h )
+    cmp #CHOR_OP_JNE                ; \
+    bne +                           ;  |- JUMP IF NOT EASY ( addr_l addr_h )
+        jsr .chor_next_byte         ;  |
+        tax                         ;  |
+        jsr .chor_next_byte         ;  |
+        tay                         ;  |
+        lda difficulty              ;  |
+        cmp #DIFFICULTY_EASY        ;  |
+        beq .op_jne_end             ;  |
+        sty choregraphy_pc_h        ;  |
+        stx choregraphy_pc_l        ;  |
+        .op_jne_end:                ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_JNH                ; \
+    bne +                           ;  |- JUMP IF NOT HARD MODE ( addr_l addr_h )
         jsr .chor_next_byte         ;  |
         tax                         ;  |
         jsr .chor_next_byte         ;  |
         tay                         ;  |
         lda difficulty              ;  |
         cmp #DIFFICULTY_HARD        ;  |
-        bne .op_jhm_end             ;  |
+        beq .op_jhm_end             ;  |
         sty choregraphy_pc_h        ;  |
         stx choregraphy_pc_l        ;  |
         .op_jhm_end:                ;  |

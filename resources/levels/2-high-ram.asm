@@ -370,19 +370,23 @@
 !byte CHOR_OP_LDA, $10
 
 .lvl2_s13:
+!byte CHOR_OP_JEM, <.lvl2_s13_ez1, >.lvl2_s13_ez1
 !byte CHOR_OP_SPS, $08, $08
 !byte CHOR_OP_BIS, 4
     !byte id_mov_incr, $14
     !byte id_mov_incr, $23
     !byte id_mov_incr, $33
     !byte id_mov_incr, $42
+.lvl2_s13_ez1:
 !byte CHOR_OP_SLP, $0B
+!byte CHOR_OP_JEM, <.lvl2_s13_ez2, >.lvl2_s13_ez2
 !byte CHOR_OP_SPS, $E0, $08
 !byte CHOR_OP_BIS, 4
     !byte id_mov_dcic, $14
     !byte id_mov_dcic, $23
     !byte id_mov_dcic, $33
     !byte id_mov_dcic, $42
+.lvl2_s13_ez2:
 !byte CHOR_OP_SLP, $0B
 !byte CHOR_OP_SPS, $6F, $08
 !byte CHOR_OP_SRX
@@ -441,18 +445,18 @@
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_PRT, 2,4, <lvl1_str_warning, >lvl1_str_warning
 !byte CHOR_OP_SLP, $40
-!byte CHOR_OP_MOB, $01, $6D, $00
-!byte CHOR_OP_COB, $01, id_mov_incr, $01
+!byte CHOR_OP_MOJ, $01, $6D, $00
+!byte CHOR_OP_COJ, $01, id_mov_incr, $01
 !byte CHOR_OP_MUS, <m_cowardmenace2, >m_cowardmenace2
 !byte CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 !byte CHOR_OP_SLP, $40
-!byte CHOR_OP_COB, $01, id_mov_incr, $00
+!byte CHOR_OP_COJ, $01, id_mov_incr, $00
 !byte CHOR_OP_PRT, 2,4, <lvl1_str_warning, >lvl1_str_warning
 !byte CHOR_OP_SLP, $40
 !byte CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 
 !byte CHOR_OP_SBG, t_trace_gl_id
-!byte CHOR_OP_COB, $01, id_mov_Iinc, $41
+!byte CHOR_OP_COJ, $01, id_mov_Iinc, $41
 !byte CHOR_OP_LDA, $20
 .lvl2_boss1_lp:
 !byte CHOR_OP_SEK, $01
@@ -483,15 +487,15 @@
 
 .lvl2_boss1_end:
 !byte CHOR_OP_SOT, $00
-!byte CHOR_OP_COB, $01, id_mov_incr, $02
+!byte CHOR_OP_COJ, $01, id_mov_incr, $02
 !byte CHOR_OP_SLP, $20
-!byte CHOR_OP_COB, $01, id_mov_rng, $00
+!byte CHOR_OP_COJ, $01, id_mov_rng, $00
 !byte CHOR_OP_SLP, $90
 !byte CHOR_OP_SPR, $01, $01, virus3_spid
 !byte CHOR_OP_SLP, $10
-!byte CHOR_OP_COB, $01, id_mov_incr, $00
+!byte CHOR_OP_COJ, $01, id_mov_incr, $00
 !byte CHOR_OP_SLP, $3C
-!byte CHOR_OP_COB, $01, id_mov_decr, $02
+!byte CHOR_OP_COJ, $01, id_mov_decr, $02
 !byte CHOR_OP_SLP, $3C
 !pet CHOR_OP_PRD, 2,4,"level cleared!", PET_NULL
 !byte CHOR_OP_SLP, $3C

@@ -225,18 +225,18 @@
 !byte CHOR_OP_SLP, $10
 !byte CHOR_OP_SCR, $00
 !byte CHOR_OP_SLP, $10
-!byte CHOR_OP_MOB, $01, $6D, $00
-!byte CHOR_OP_COB, $01, id_mov_incr, $01
+!byte CHOR_OP_MOJ, $01, $6D, $00
+!byte CHOR_OP_COJ, $01, id_mov_incr, $01
 !byte CHOR_OP_MUS, <m_cowardmenace, >m_cowardmenace
 !pet CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 !byte CHOR_OP_SLP, $40
-!byte CHOR_OP_COB, $01, id_mov_incr, $00
+!byte CHOR_OP_COJ, $01, id_mov_incr, $00
 !pet CHOR_OP_PRT, 2,4, <lvl1_str_warning, >lvl1_str_warning
 !byte CHOR_OP_SLP, $40
 !pet CHOR_OP_PRT, 2,4, <lvl1_str_clr_warning, >lvl1_str_clr_warning
 
 !byte CHOR_OP_SLP, $20
-!byte CHOR_OP_COB, $01, id_mov_bcir, $00
+!byte CHOR_OP_COJ, $01, id_mov_bcir, $00
 !byte CHOR_OP_SLP, $3C
 !byte CHOR_OP_LDA, $02
 !byte CHOR_OP_LDC, $0D
@@ -295,15 +295,15 @@
 
 .lvl1_boss1_end:
 !byte CHOR_OP_SOT, $00
-!byte CHOR_OP_COB, $01, id_mov_incr, $02
+!byte CHOR_OP_COJ, $01, id_mov_incr, $02
 !byte CHOR_OP_SLP, $20
-!byte CHOR_OP_COB, $01, id_mov_rng, $00
+!byte CHOR_OP_COJ, $01, id_mov_rng, $00
 !byte CHOR_OP_SLP, $90
 !byte CHOR_OP_SPR, $01, $01, virus2_spid
 !byte CHOR_OP_SLP, $10
-!byte CHOR_OP_COB, $01, id_mov_incr, $00
+!byte CHOR_OP_COJ, $01, id_mov_incr, $00
 !byte CHOR_OP_SLP, $3C
-!byte CHOR_OP_COB, $01, id_mov_decr, $02
+!byte CHOR_OP_COJ, $01, id_mov_decr, $02
 !byte CHOR_OP_SLP, $3C
 !pet CHOR_OP_PRD, 2,4,"level cleared!", PET_NULL
 !byte CHOR_OP_SLP, $3C

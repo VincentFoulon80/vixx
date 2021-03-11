@@ -793,13 +793,13 @@ music_idle_lp:
 !src "resources/musics/data_rain.asm"
 !src "resources/musics/moving_bytes.asm"
 
+!src "resources/levels/1-filesystem.asm"
+!src "resources/levels/2-high-ram.asm"
 choregraphy_start:
 !byte CHOR_OP_SPS, $6F, $C7
 !byte CHOR_OP_INS, id_mov_plyr, $00
 !byte CHOR_OP_SPS, $00, $FF
 !byte CHOR_OP_INS, id_mov_incr, $00
-!src "resources/levels/1-filesystem.asm"
-!src "resources/levels/2-high-ram.asm"
 !src "resources/levels/3-low-ram.asm"
 
 ; force virus out
@@ -807,7 +807,7 @@ choregraphy_start:
 !byte CHOR_OP_INS, id_mov_incr, $00
 ; end loop, kill the player
 !byte CHOR_OP_SPS, $01, $01
-!pet CHOR_OP_PRD, 8, 2, "- end of game -", PET_NULL
+!pet CHOR_OP_PRD, 7, 2, "- end of game -", PET_NULL
 .choregraphy_end:
 !byte CHOR_OP_SLP, $02
 !byte CHOR_OP_FPS, $60

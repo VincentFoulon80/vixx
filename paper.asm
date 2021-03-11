@@ -147,7 +147,7 @@ music_volume    = $50
 sfx_volume      = $51
 
 difficulty          = $70
-graze_bonus       = $71
+graze_bonus         = $71
 score_over_time     = $72
 scroll_speed        = $73
 invincibility_cnt   = $74
@@ -190,6 +190,7 @@ game_mode           = $7F
     +fn_vera_direct_upload t_trace_b1, t_trace_b1_packet_size, t_trace_b1_packet_qty
     +fn_vera_direct_upload t_trace_b2, t_trace_b2_packet_size, t_trace_b2_packet_qty
     +fn_vera_direct_upload t_trace_gl, t_trace_gl_packet_size, t_trace_gl_packet_qty
+    +fn_vera_direct_upload t_dots, t_dots_packet_size, t_dots_packet_qty
     +fn_vera_direct_upload t_scanl, t_scanl_packet_size, t_scanl_packet_qty
 
 
