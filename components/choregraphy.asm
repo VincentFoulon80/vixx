@@ -56,6 +56,7 @@ CHOR_OP_JRN = $E7 ; Jump RaNdomly           : addr_l, addr_h
 CHOR_OP_JEM = $E8 ; Jump if Easy Mode       : addr_l, addr_h
 CHOR_OP_JNE = $E9 ; Jump if Not Easy mode   : addr_l, addr_h
 CHOR_OP_JNH = $EA ; Jump if Not Hard mode   : addr_l, addr_h
+CHOR_OP_JHM = $EB ; Jump if Hard Mode       : addr_l, addr_h
 
 CHOR_OP_EXC = $FF ; EXeCute code            : address_l, address_y
 
@@ -603,10 +604,13 @@ run_choregraphy:
         pha                         ;  |
         jsr rng                     ;  |
         cmp #$00                    ;  |
-        bmi .op_jrn_end             ;  |
+        bmi .op_jrn_other           ;  |
         pla                         ;  |
         sta choregraphy_pc_h        ;  |
         stx choregraphy_pc_l        ;  |
+        jmp .op_jrn_end             ;  |
+        .op_jrn_other:              ;  |
+        pla                         ;  |
         .op_jrn_end:                ;  |
     jmp .chor_end                   ; /
 +
@@ -646,7 +650,21 @@ run_choregraphy:
         tay                         ;  |
         lda difficulty              ;  |
         cmp #DIFFICULTY_HARD        ;  |
-        beq .op_jhm_end             ;  |
+        beq .op_jnh_end             ;  |
+        sty choregraphy_pc_h        ;  |
+        stx choregraphy_pc_l        ;  |
+        .op_jnh_end:                ;  |
+    jmp .chor_end                   ; /
++
+    cmp #CHOR_OP_JHM                ; \
+    bne +                           ;  |- JUMP IF HARD MODE ( addr_l addr_h )
+        jsr .chor_next_byte         ;  |
+        tax                         ;  |
+        jsr .chor_next_byte         ;  |
+        tay                         ;  |
+        lda difficulty              ;  |
+        cmp #DIFFICULTY_HARD        ;  |
+        bne .op_jhm_end             ;  |
         sty choregraphy_pc_h        ;  |
         stx choregraphy_pc_l        ;  |
         .op_jhm_end:                ;  |

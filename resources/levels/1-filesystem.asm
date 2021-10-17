@@ -114,8 +114,19 @@
 .lvl1_s4:
 !byte CHOR_OP_SPS, $6F, $20
 !byte CHOR_OP_LDA, $08
+!byte CHOR_OP_JNH, <.lvl1_s4_lp, >.lvl1_s4_lp         ; \_ hard mode: double number of explosions
+!byte CHOR_OP_LDA, $10                                ; /
 
 .lvl1_s4_lp:
+!byte CHOR_OP_JNH, <.lvl1_s4_exp, >.lvl1_s4_exp         ; \
+!byte CHOR_OP_JRN, <.lvl1_s4_h_plus, >.lvl1_s4_h_plus   ;  |- hard mode
+; .lvl1_s4_h_minus:                                     ;  |
+!byte CHOR_OP_MPS, $F1, $00                             ;  |> x-15
+!byte CHOR_OP_JMP, <.lvl1_s4_exp, >.lvl1_s4_exp         ;  |
+.lvl1_s4_h_plus:                                        ;  |
+!byte CHOR_OP_FPS, $F0                                  ;  |> x+15
+                                                        ; /
+.lvl1_s4_exp:
 !byte CHOR_OP_BIS, 6
     !byte id_mov_dcic, $40
     !byte id_mov_dcic, $31
@@ -138,7 +149,10 @@
     !byte id_mov_icdc, $31
     !byte id_mov_icdc, $40
 !byte CHOR_OP_DEA
-!byte CHOR_OP_SLP, $20
+!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_JHM, <.lvl1_s4_endlp, >.lvl1_s4_endlp ; \
+!byte CHOR_OP_SLP, $10                              ;  |- hard mode: sleep half time
+.lvl1_s4_endlp:                                     ; /
 !byte CHOR_OP_JAN, <.lvl1_s4_lp, >.lvl1_s4_lp
 !byte CHOR_OP_SLP, $30
 
@@ -157,20 +171,26 @@
 ;
 
 .lvl1_s5:
-!byte CHOR_OP_LDA, $20
 !byte CHOR_OP_SPS, $00, $01
+!byte CHOR_OP_LDA, $20
+!byte CHOR_OP_JNH, <.lvl1_s5_lp, >.lvl1_s5_lp         ; \_ hard mode: double number of explosions
+!byte CHOR_OP_LDA, $40                                ; /
 
 .lvl1_s5_lp:
 !byte CHOR_OP_SRX
 !byte CHOR_OP_INS, id_mov_incr, $04
 !byte CHOR_OP_DEA
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_JHM, <.lvl1_s5_endlp, >.lvl1_s5_endlp ; \
+!byte CHOR_OP_SLP, $08                              ;  |- hard mode: sleep half time
+.lvl1_s5_endlp:                                     ; /
 !byte CHOR_OP_JAN, <.lvl1_s5_lp, >.lvl1_s5_lp
 
 !byte CHOR_OP_SCR, $06
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
 !byte CHOR_OP_SCR, $05
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_CMO, $02, $7D, id_mov_incr, $05
 !byte CHOR_OP_SCR, $08
 
 ;
@@ -178,8 +198,8 @@
 ;
 
 .lvl1_s6:
-!byte CHOR_OP_LDA, $20
 !byte CHOR_OP_SPS, $00, $01
+!byte CHOR_OP_LDA, $20
 
 .lvl1_s6_lp:
 !byte CHOR_OP_SRX
@@ -189,11 +209,12 @@
 !byte CHOR_OP_JAN, <.lvl1_s6_lp, >.lvl1_s6_lp
 
 !byte CHOR_OP_SCR, $0B
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
 !byte CHOR_OP_SCR, $0A
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
 !byte CHOR_OP_SCR, $09
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_CMO, $02, $7D, id_mov_incr, $07
 !byte CHOR_OP_SCR, $0C
 
 ;
@@ -201,22 +222,28 @@
 ;
 
 .lvl1_s7:
-!byte CHOR_OP_LDA, $20
 !byte CHOR_OP_SPS, $00, $01
+!byte CHOR_OP_LDA, $20
+!byte CHOR_OP_JNH, <.lvl1_s7_lp, >.lvl1_s7_lp         ; \_ hard mode: double number of explosions
+!byte CHOR_OP_LDA, $40                                ; /
 
 .lvl1_s7_lp:
 !byte CHOR_OP_SRX
 !byte CHOR_OP_INS, id_mov_incr, $07
 !byte CHOR_OP_DEA
-!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_SLP, $04
+!byte CHOR_OP_JHM, <.lvl1_s7_endlp, >.lvl1_s7_endlp ; \
+!byte CHOR_OP_SLP, $04                              ;  |- hard mode: sleep half time
+.lvl1_s7_endlp:                                     ; /
 !byte CHOR_OP_JAN, <.lvl1_s7_lp, >.lvl1_s7_lp
 
 !byte CHOR_OP_SCR, $0F
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
 !byte CHOR_OP_SCR, $0E
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
 !byte CHOR_OP_SCR, $0D
-!byte CHOR_OP_SLP, $10
+!byte CHOR_OP_SLP, $08
+!byte CHOR_OP_CMO, $02, $7D, id_mov_incr, $0B
 !byte CHOR_OP_SCR, $10
 
 ;
@@ -224,8 +251,8 @@
 ;
 
 .lvl1_s8:
-!byte CHOR_OP_LDA, $30
 !byte CHOR_OP_SPS, $00, $01
+!byte CHOR_OP_LDA, $30
 
 .lvl1_s8_lp:
 !byte CHOR_OP_SRX
@@ -233,7 +260,11 @@
 !byte CHOR_OP_DEA
 !byte CHOR_OP_SLP, $04
 !byte CHOR_OP_JAN, <.lvl1_s8_lp, >.lvl1_s8_lp
-!byte CHOR_OP_SLP, $3C
+!byte CHOR_OP_SLP, $7C
+
+;
+; boss
+;
 
 .lvl1_boss1:
 !pet CHOR_OP_PRT, 2,4, <lvl1_str_warning, >lvl1_str_warning
@@ -308,6 +339,30 @@
     !byte id_mov_decr, $22
     !byte id_mov_decr, $31
     !byte id_mov_decr, $13
+!byte CHOR_OP_JNH, <.lvl1_boss1_skip_exp, >.lvl1_boss1_skip_exp
+!byte CHOR_OP_SEK, $01
+!byte CHOR_OP_BIS, 6
+    !byte id_mov_dcic, $40
+    !byte id_mov_dcic, $31
+    !byte id_mov_dcic, $22
+    !byte id_mov_dcic, $13
+    !byte id_mov_dcic, $04
+    !byte id_mov_incr, $13
+!byte CHOR_OP_BIS, 6
+    !byte id_mov_incr, $22
+    !byte id_mov_incr, $31
+    !byte id_mov_incr, $40
+    !byte id_mov_decr, $40
+    !byte id_mov_decr, $31
+    !byte id_mov_decr, $22
+!byte CHOR_OP_BIS, 6
+    !byte id_mov_decr, $13
+    !byte id_mov_decr, $04
+    !byte id_mov_icdc, $13
+    !byte id_mov_icdc, $22
+    !byte id_mov_icdc, $31
+    !byte id_mov_icdc, $40
+.lvl1_boss1_skip_exp:
 !byte CHOR_OP_LDB, $04
 !byte CHOR_OP_SPS, $00, $02
 .lvl1_boss1_lp2:

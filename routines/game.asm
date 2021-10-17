@@ -265,7 +265,6 @@ insert_object:              ; insert a new object in the list
     dec obj_count
     rts
 
-
 .insert_obj_insert          ; free slot found
     ply
 +   ldy #$01                ; \
